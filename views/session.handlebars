@@ -1,0 +1,115 @@
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Current State: <span class="badge bg-primary">{{state}}</span></h2>
+                <form hx-post="/session/restart" hx-target="body">
+                    <input type="hidden" name="sessionId" value="{{sessionId}}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Start Over</button>
+                </form>
+            </div>
+            <div class="card-body">
+                <p id="feedback">{{feedback}}</p>
+                <button id="hint-btn" class="btn btn-sm btn-outline-info" hx-post="/session/hint" hx-target="#hint" hx-vals='{"sessionId": "{{sessionId}}"}'>Get Hint</button>
+                <div id="hint" class="mt-2 p-2 border-start border-info border-3 d-none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="code-form" hx-post="/session/submit" hx-target="body">
+    <input type="hidden" name="sessionId" value="{{sessionId}}">
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h3 class="h6 mb-0">Test Cases</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {{#each testCases}}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{description}}
+                            {{#if (eq status "DONE")}}
+                            <span class="badge bg-success">✓</span>
+                            {{else if (eq status "IN_PROGRESS")}}
+                            <span class="badge bg-warning">In Progress</span>
+                            {{else}}
+                            <span class="badge bg-secondary">Todo</span>
+                            {{/if}}
+                        </li>
+                        {{/each}}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h3 class="h6 mb-0">Production Code</h3>
+                </div>
+                <div class="card-body">
+                    <textarea id="production-code" name="productionCode" class="form-control code-editor" rows="15">{{productionCode}}</textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h3 class="h6 mb-0">Test Code</h3>
+                </div>
+                <div class="card-body">
+                    <textarea id="test-code" name="testCode" class="form-control code-editor" rows="15">{{testCode}}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="button" id="help-btn" class="btn btn-secondary ms-2">Help Me</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize CodeMirror for production code
+        window.productionEditor = CodeMirror.fromTextArea(document.getElementById('production-code'), {
+            mode: 'javascript',
+            lineNumbers: true,
+            theme: 'default',
+            indentUnit: 2,
+            tabSize: 2
+        });
+        
+        // Initialize CodeMirror for test code
+        window.testEditor = CodeMirror.fromTextArea(document.getElementById('test-code'), {
+            mode: 'javascript',
+            lineNumbers: true,
+            theme: 'default',
+            indentUnit: 2,
+            tabSize: 2
+        });
+        
+        // Update textareas before form submission
+        document.getElementById('code-form').addEventListener('submit', function() {
+            window.productionEditor.save();
+            window.testEditor.save();
+        });
+        
+        // Handle hint visibility
+        document.getElementById('hint-btn').addEventListener('click', function() {
+            document.getElementById('hint').classList.remove('d-none');
+        });
+        
+        // Help me button (same as hint)
+        document.getElementById('help-btn').addEventListener('click', function() {
+            document.getElementById('hint-btn').click();
+        });
+    });
+</script>

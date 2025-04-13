@@ -1,0 +1,63 @@
+/* General styles */
+body {
+  background-color: #f8f9fa;
+}
+
+/* CodeMirror customizations */
+.CodeMirror {
+  height: 350px;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+}
+
+/* State badges */
+.badge.bg-primary {
+  font-size: 1rem;
+}
+
+/* Feedback section */
+#feedback {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 0.25rem;
+}
+
+/* Hint section */
+#hint {
+  background-color: #f8f9ff;
+  padding: 1rem;
+}
+
+/* Test case list */
+.list-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Cards and panels */
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+/* Button customizations */
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+/* Fix for CodeMirror in Bootstrap */
+.CodeMirror-scroll {
+  min-height: 300px;
+}
