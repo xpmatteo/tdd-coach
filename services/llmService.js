@@ -1,5 +1,10 @@
 const Anthropic = require('@anthropic-ai/sdk');
 
+// Verify that API key is available
+if (!process.env.ANTHROPIC_API_KEY) {
+  throw new Error('ANTHROPIC_API_KEY environment variable is not defined');
+}
+
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
