@@ -40,5 +40,22 @@ module.exports = {
    */
   and: function(a, b) {
     return a && b;
+  },
+  
+  /**
+   * Convert to string helper
+   * Usage: {{toString value}}
+   */
+  toString: function(value) {
+    return value ? value.toString() : '';
+  },
+  
+  /**
+   * Custom lookup helper to access array elements by index and then a property
+   * Usage: {{lookup array index "property"}}
+   */
+  lookup: function(array, index, prop) {
+    if (!array || !array[index]) return '';
+    return prop ? array[index][prop] : array[index];
   }
 };

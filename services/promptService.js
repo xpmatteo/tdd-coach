@@ -46,7 +46,8 @@ exports.getPrompt = (session) => {
     productionCode: session.productionCode,
     testCode: session.testCode,
     testCases: session.testCases,
-    currentTest
+    currentTest,
+    selectedTestIndex: session.selectedTestIndex
   };
   
   // Apply template with context

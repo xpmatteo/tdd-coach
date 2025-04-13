@@ -19,14 +19,19 @@ Current test code:
 {{testCode}}
 ```
 
+{{#if currentTest}}
 The learner picked the following test case:
 ```text
-{{#each testCases}}
-  {{#if (eq status "IN_PROGRESS")}}
-    {{{description}}}
-  {{/if}}
-{{/each}}
+{{currentTest.description}}
 ```
+{{else if selectedTestIndex}}
+The learner is considering the following test case:
+```text
+{{lookup testCases selectedTestIndex "description"}}
+```
+{{else}}
+The learner has not yet selected a test case.
+{{/if}}
 
 The criteria for picking the next test are
 

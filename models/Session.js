@@ -13,6 +13,7 @@ class Session {
     this.productionCode = kata.initialProductionCode || '';
     this.testCode = kata.initialTestCode || '';
     this.currentTestIndex = null;
+    this.selectedTestIndex = null;
   }
   
   /**

@@ -17,7 +17,8 @@ exports.newSession = (req, res) => {
     testCases: session.testCases,
     productionCode: session.productionCode,
     testCode: session.testCode,
-    feedback: "Welcome to the FizzBuzz kata! Let's get started with TDD."
+    feedback: "Welcome to the FizzBuzz kata! Let's get started with TDD.",
+    selectedTestIndex: null
   });
 };
 
@@ -33,13 +34,9 @@ exports.submitCode = async (req, res) => {
   session.productionCode = productionCode;
   session.testCode = testCode;
   
-  // If in PICK state and a test case was selected, mark it as in progress
+  // Store the selected test index if in PICK state
   if (session.state === 'PICK' && selectedTestIndex !== undefined) {
-    try {
-      session.selectTestCase(parseInt(selectedTestIndex, 10));
-    } catch (error) {
-      return res.status(400).send(error.message);
-    }
+    session.selectedTestIndex = selectedTestIndex;
   }
   
   // Get appropriate prompt for current state
@@ -51,6 +48,17 @@ exports.submitCode = async (req, res) => {
     
     // Process feedback and update session state if needed
     if (feedback.proceed === 'yes') {
+      // If in PICK state and a test case was selected, mark it as in progress
+      if (session.state === 'PICK' && session.selectedTestIndex !== null) {
+        try {
+          session.selectTestCase(parseInt(session.selectedTestIndex, 10));
+          // Clear the selectedTestIndex as we're moving to the RED state
+          session.selectedTestIndex = null;
+        } catch (error) {
+          return res.status(400).send(error.message);
+        }
+      }
+      
       session.advanceState();
     }
     
@@ -61,7 +69,8 @@ exports.submitCode = async (req, res) => {
       testCases: session.testCases,
       productionCode: session.productionCode,
       testCode: session.testCode,
-      feedback: feedback.comments
+      feedback: feedback.comments,
+      selectedTestIndex: session.selectedTestIndex
     });
   } catch (error) {
     console.error('Error getting LLM feedback:', error);
@@ -105,6 +114,7 @@ exports.restartSession = (req, res) => {
     testCases: session.testCases,
     productionCode: session.productionCode,
     testCode: session.testCode,
-    feedback: "Session restarted. Let's begin again!"
+    feedback: "Session restarted. Let's begin again!",
+    selectedTestIndex: null
   });
 };
