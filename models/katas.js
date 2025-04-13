@@ -11,22 +11,47 @@ module.exports = {
     testCases: [
       {
         id: 1,
-        description: 'Should return the number for non-multiples of 3 or 5',
+        description: 'ordinary number: 1 should return "1"',
         status: 'TODO'
       },
       {
         id: 2,
-        description: 'Should return "Fizz" for multiples of 3',
+        description: 'ordinary number: 2 should return "2"',
         status: 'TODO'
       },
       {
         id: 3,
-        description: 'Should return "Buzz" for multiples of 5',
+        description: 'multiple of 3: 3 should return "Fizz',
         status: 'TODO'
       },
       {
         id: 4,
-        description: 'Should return "FizzBuzz" for multiples of both 3 and 5',
+        description: 'ordinary number: 4 should return "4"',
+        status: 'TODO'
+      },
+      {
+        id: 5,
+        description: 'multiple of 5: 5 should return "Buzz"',
+        status: 'TODO'
+      },
+      {
+        id: 6,
+        description: 'multiple of 3: 6 should return "Fizz',
+        status: 'TODO'
+      },
+      {
+        id: 7,
+        description: 'multiple of 5: 10 should return "Buzz"',
+        status: 'TODO'
+      },
+      {
+        id: 8,
+        description: 'multiple of both 3 and 5: 15 should return "FizzBuzz',
+        status: 'TODO'
+      },
+      {
+        id: 9,
+        description: 'multiple of both 3 and 5: 30 should return "FizzBuzz',
         status: 'TODO'
       }
     ]
