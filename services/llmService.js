@@ -21,13 +21,12 @@ exports.getLlmFeedback = async (prompt) => {
       max_tokens: 1000,
       messages: [
         { role: 'user', content: prompt }
-      ],
-      response_format: { type: 'json_object' }
+      ]
     });
-    
+
     // Parse the JSON response
     const feedback = JSON.parse(response.content[0].text);
-    
+
     // Ensure required fields exist
     return {
       comments: feedback.comments || 'No comments provided',
