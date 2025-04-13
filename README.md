@@ -42,6 +42,8 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
 - Step-by-step TDD guidance
 - Hint system for when you get stuck
 - Progress tracking for test cases
+- Two-step test selection process (select → confirm)
+- Dedicated coach feedback area
 
 ## Technology Stack
 

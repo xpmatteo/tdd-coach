@@ -35,6 +35,12 @@ The session tracks:
 - Test cases and their status (TODO, IN_PROGRESS, DONE)
 - Production and test code
 - The currently selected test case
+- The temporarily selected test case (when in PICK state before confirmation)
+
+The PICK state implements a two-step selection process:
+1. User selects a test case (which is stored but not yet marked as IN_PROGRESS)
+2. LLM evaluates if the selection is appropriate
+3. If approved, the test case is marked as IN_PROGRESS and the state advances to RED
 
 ### 2. Prompt Templates
 
@@ -56,8 +62,11 @@ The LLM service:
 
 The UI follows the layout specified in the requirements:
 - Top panel displays context (current state)
-- Middle panels show test cases, production code, and test code
+- Middle panels show test cases (with scrollable overflow), production code, and test code
+- Coach feedback section below the code editors
 - Bottom panel contains action buttons
+
+All panels maintain consistent fixed heights with scrollable content areas to ensure the action buttons remain visible regardless of content size.
 
 HTMX is used for dynamic updates without a separate frontend framework.
 
@@ -78,6 +87,37 @@ HTMX is used for dynamic updates without a separate frontend framework.
 5. **Offline Mode**: Allow for practicing without an internet connection
 6. **Customizable Prompts**: Allow instructors to customize coaching style
 
+## User Experience Flow
+
+### 1. PICK State
+1. User is presented with radio buttons for test cases in TODO state
+2. User selects a test case and clicks Submit
+3. LLM evaluates if the selection is appropriate
+4. If proceed is "yes", test case is marked as IN_PROGRESS and state advances to RED
+5. If proceed is "no", user remains in PICK state with the same selection
+
+### 2. RED State
+1. User writes a failing test for the selected test case
+2. User clicks Submit
+3. LLM evaluates if the test fails appropriately
+4. If proceed is "yes", state advances to GREEN
+5. If proceed is "no", user remains in RED state with feedback
+
+### 3. GREEN State
+1. User writes minimal code to make the test pass
+2. User clicks Submit
+3. LLM evaluates if the implementation is correct and minimal
+4. If proceed is "yes", state advances to REFACTOR
+5. If proceed is "no", user remains in GREEN state with feedback
+
+### 4. REFACTOR State
+1. User improves code quality while keeping tests passing
+2. User clicks Submit
+3. LLM evaluates if the refactoring is appropriate
+4. If proceed is "yes" and there are more tests, current test is marked DONE and state advances to PICK
+5. If proceed is "yes" and all tests are DONE, session is complete
+6. If proceed is "no", user remains in REFACTOR state with feedback
+
 ## Implementation Notes
 
 - The app currently supports only the FizzBuzz kata
@@ -91,3 +131,4 @@ HTMX is used for dynamic updates without a separate frontend framework.
 2. **Context**: Full context (code, test cases, current state) is provided to the LLM
 3. **Structure**: Responses are structured as JSON with comments, hints, and proceed fields
 4. **Educational**: Feedback is designed to be instructive rather than just evaluative
+5. **State-Specific**: Different prompts for different states, with specialized handling (e.g., handling temporary selections in PICK state)

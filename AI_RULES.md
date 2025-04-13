@@ -1,3 +1,12 @@
+## UI Design Principles
+
+1. **Fixed Heights**: Use fixed heights with scrollable overflow for content areas to ensure consistent layout
+2. **Visibility of Actions**: Ensure action buttons remain visible at all times
+3. **Feedback Location**: Place feedback near the relevant action buttons
+4. **Progressive Disclosure**: Reveal information in a logical sequence matching the TDD flow
+5. **Visual Status**: Clearly indicate the current state and status of test cases
+6. **CSS Organization**: Use specific classes over inline styles for consistent styling
+
 # AI Rules for TDD Coach Project
 
 This document provides guidelines for AI coding assistants when working on the TDD Coach project. Please follow these conventions and principles to maintain code quality and consistency.
@@ -55,6 +64,9 @@ Maintain the established project structure:
 3. Use built-in helpers for conditional logic
 4. Create named partials for reusable components
 5. Keep templates focused on presentation, not business logic
+6. Create custom helpers for complex conditional logic
+7. Implement proper error handling for custom helpers
+8. Use lookup helpers to access nested properties safely
 
 ### Express
 
@@ -97,6 +109,9 @@ When adding or changing features:
 2. Use explicit state transitions
 3. Validate state transitions
 4. Handle invalid state transitions gracefully
+5. Consider intermediate states (like test selection before confirmation)
+6. Avoid immediate state changes that depend on external validation
+7. Store temporary selections separately from confirmed selections
 
 ## Security Considerations
 
