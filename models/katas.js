@@ -36,7 +36,7 @@ module.exports = {
       },
       {
         id: 6,
-        description: 'multiple of 3: 6 should return "Fizz',
+        description: 'multiple of 3: 6 should return "Fizz"',
         status: 'TODO'
       },
       {
@@ -46,12 +46,12 @@ module.exports = {
       },
       {
         id: 8,
-        description: 'multiple of both 3 and 5: 15 should return "FizzBuzz',
+        description: 'multiple of both 3 and 5: 15 should return "FizzBuzz"',
         status: 'TODO'
       },
       {
         id: 9,
-        description: 'multiple of both 3 and 5: 30 should return "FizzBuzz',
+        description: 'multiple of both 3 and 5: 30 should return "FizzBuzz"',
         status: 'TODO'
       }
     ]

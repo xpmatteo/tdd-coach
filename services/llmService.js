@@ -16,6 +16,9 @@ const client = new Anthropic({
  */
 exports.getLlmFeedback = async (prompt) => {
   try {
+    console.log('--------');
+    console.log('Prompt:', prompt);
+    console.log('--------');
     const response = await client.messages.create({
       model: 'claude-3-5-sonnet-20240620',
       max_tokens: 1000,
@@ -23,6 +26,10 @@ exports.getLlmFeedback = async (prompt) => {
         { role: 'user', content: prompt }
       ]
     });
+
+    console.log('--------');
+    console.log(response.content[0].text);
+    console.log('--------');
 
     // Parse the JSON response
     const feedback = JSON.parse(response.content[0].text);
