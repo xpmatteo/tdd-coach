@@ -22,7 +22,7 @@ exports.newSession = (req, res) => {
 };
 
 exports.submitCode = async (req, res) => {
-  const { sessionId, productionCode, testCode } = req.body;
+  const { sessionId, productionCode, testCode, selectedTestIndex } = req.body;
   const session = sessions.get(sessionId);
   
   if (!session) {
@@ -32,6 +32,15 @@ exports.submitCode = async (req, res) => {
   // Update session with latest code
   session.productionCode = productionCode;
   session.testCode = testCode;
+  
+  // If in PICK state and a test case was selected, mark it as in progress
+  if (session.state === 'PICK' && selectedTestIndex !== undefined) {
+    try {
+      session.selectTestCase(parseInt(selectedTestIndex, 10));
+    } catch (error) {
+      return res.status(400).send(error.message);
+    }
+  }
   
   // Get appropriate prompt for current state
   const prompt = getPrompt(session);

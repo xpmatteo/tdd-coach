@@ -32,5 +32,13 @@ module.exports = {
    */
   lt: function(a, b) {
     return a < b;
+  },
+  
+  /**
+   * Logical AND helper
+   * Usage: {{#if (and condition1 condition2)}}...{{/if}}
+   */
+  and: function(a, b) {
+    return a && b;
   }
 };

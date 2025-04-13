@@ -30,7 +30,12 @@
                     <ul class="list-group">
                         {{#each testCases}}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{description}}
+                            <div class="d-flex align-items-center">
+                                {{#if (and (eq ../state "PICK") (eq status "TODO"))}}
+                                <input type="radio" name="selectedTestIndex" value="{{@index}}" class="me-2" required>
+                                {{/if}}
+                                {{description}}
+                            </div>
                             {{#if (eq status "DONE")}}
                             <span class="badge bg-success">✓</span>
                             {{else if (eq status "IN_PROGRESS")}}
