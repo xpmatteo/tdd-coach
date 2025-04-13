@@ -9,9 +9,7 @@
                 </form>
             </div>
             <div class="card-body">
-                <p id="feedback">{{feedback}}</p>
-                <button id="hint-btn" class="btn btn-sm btn-outline-info" hx-post="/session/hint" hx-target="#hint" hx-vals='{"sessionId": "{{sessionId}}"}'>Get Hint</button>
-                <div id="hint" class="mt-2 p-2 border-start border-info border-3 d-none"></div>
+                <!-- State context info can go here in the future -->
             </div>
         </div>
     </div>
@@ -74,9 +72,29 @@
     </div>
     
     <div class="row mt-3">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="h6 mb-0">Coach Feedback</h3>
+                </div>
+                <div class="card-body">
+                    <div id="coach-feedback">
+                        {{#if feedback}}
+                        <p>{{feedback}}</p>
+                        {{else}}
+                        <p class="text-muted">Submit your work to get feedback from the coach.</p>
+                        {{/if}}
+                    </div>
+                    <div id="hint" class="mt-2 p-2 border-start border-info border-3 d-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-2">
         <div class="col-12 text-center">
             <button type="submit" class="btn btn-primary">Submit</button>
-            <button type="button" id="help-btn" class="btn btn-secondary ms-2">Help Me</button>
+            <button type="button" id="help-btn" class="btn btn-secondary ms-2" hx-post="/session/hint" hx-target="#hint" hx-vals='{"sessionId": "{{sessionId}}"}'>Help Me</button>
         </div>
     </div>
 </form>
@@ -108,13 +126,8 @@
         });
         
         // Handle hint visibility
-        document.getElementById('hint-btn').addEventListener('click', function() {
-            document.getElementById('hint').classList.remove('d-none');
-        });
-        
-        // Help me button (same as hint)
         document.getElementById('help-btn').addEventListener('click', function() {
-            document.getElementById('hint-btn').click();
+            document.getElementById('hint').classList.remove('d-none');
         });
     });
 </script>
