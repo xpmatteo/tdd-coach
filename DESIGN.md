@@ -29,9 +29,10 @@ The core of the application is the Session model, which implements a state machi
 - **RED**: User writes a failing test
 - **GREEN**: User writes minimal code to make the test pass
 - **REFACTOR**: User improves code quality while keeping tests passing
+- **COMPLETE**: Represents the final state when all tests are completed
 
 The session tracks:
-- Current state
+- Current state (implemented using the State pattern)
 - Test cases and their status (TODO, IN_PROGRESS, DONE)
 - Production and test code
 - The currently selected test case
@@ -42,7 +43,33 @@ The PICK state implements a two-step selection process:
 2. LLM evaluates if the selection is appropriate
 3. If approved, the test case is marked as IN_PROGRESS and the state advances to RED
 
-### 2. Prompt Templates
+### 2. State Pattern Implementation
+
+The application uses the State design pattern to manage the TDD cycle states:
+
+- **Base State Class**: Defines common interface for all states
+  - `getName()`: Returns the name of the state
+  - `onEnter()`: Actions to perform when entering the state
+  - `onExit()`: Actions to perform when exiting the state
+  - `getNextState()`: Returns the next state in the TDD cycle
+  - `canSelectTestCase()`: Whether this state allows test case selection
+  - `processSubmission()`: Processes LLM feedback for state-specific actions
+
+- **Concrete State Classes**:
+  - `PickState`: Handles test case selection
+  - `RedState`: Manages test writing phase
+  - `GreenState`: Handles implementation phase
+  - `RefactorState`: Manages code improvement phase
+  - `CompleteState`: Final state when all tests are done
+
+This pattern:
+- Encapsulates state-specific behavior in dedicated classes
+- Simplifies state transitions
+- Makes the code more maintainable and extensible
+- Eliminates complex switch statements
+- Makes adding new states easier
+
+### 3. Prompt Templates
 
 The application uses Handlebars templates to generate prompts for the LLM, with different templates for each state in the TDD cycle:
 
@@ -51,14 +78,14 @@ The application uses Handlebars templates to generate prompts for the LLM, with 
 - `green.hbs`: Evaluates if the implementation makes the test pass
 - `refactor.hbs`: Evaluates code quality improvements
 
-### 3. LLM Integration
+### 4. LLM Integration
 
 The LLM service:
 - Sends formatted prompts to the Anthropic Claude API
 - Requests responses in JSON format
 - Extracts feedback comments, hints, and a binary proceed/don't proceed signal
 
-### 4. UI Architecture
+### 5. UI Architecture
 
 The UI follows the layout specified in the requirements:
 - Top panel displays context (current state)
@@ -75,8 +102,8 @@ HTMX is used for dynamic updates without a separate frontend framework.
 1. User selects a test case or submits code
 2. Server updates session state and generates appropriate LLM prompt
 3. LLM evaluates code and returns structured feedback
-4. Server processes feedback and updates UI accordingly
-5. If feedback indicates "proceed: yes", session advances to next state
+4. Server processes feedback using state-specific logic
+5. If feedback processing indicates success, session advances to next state
 
 ## Future Enhancements
 
@@ -86,6 +113,7 @@ HTMX is used for dynamic updates without a separate frontend framework.
 4. **Code Execution**: Run tests in a sandbox to verify they actually fail/pass
 5. **Offline Mode**: Allow for practicing without an internet connection
 6. **Customizable Prompts**: Allow instructors to customize coaching style
+7. **Extended State Pattern**: Add more specialized states for advanced TDD workflows
 
 ## User Experience Flow
 
@@ -115,8 +143,12 @@ HTMX is used for dynamic updates without a separate frontend framework.
 2. User clicks Submit
 3. LLM evaluates if the refactoring is appropriate
 4. If proceed is "yes" and there are more tests, current test is marked DONE and state advances to PICK
-5. If proceed is "yes" and all tests are DONE, session is complete
+5. If proceed is "yes" and all tests are DONE, session is complete and state advances to COMPLETE
 6. If proceed is "no", user remains in REFACTOR state with feedback
+
+### 5. COMPLETE State
+1. Session is complete, user is shown a congratulatory message
+2. User can restart or exit
 
 ## Implementation Notes
 
@@ -124,6 +156,7 @@ HTMX is used for dynamic updates without a separate frontend framework.
 - All session data is stored in memory (not persistent)
 - The application doesn't run tests; it relies on the LLM to evaluate code
 - Handlebars helpers are used for conditional logic in templates
+- State pattern is used to manage the TDD cycle, making the code more maintainable
 
 ## Prompt Design Principles
 
@@ -132,3 +165,15 @@ HTMX is used for dynamic updates without a separate frontend framework.
 3. **Structure**: Responses are structured as JSON with comments, hints, and proceed fields
 4. **Educational**: Feedback is designed to be instructive rather than just evaluative
 5. **State-Specific**: Different prompts for different states, with specialized handling (e.g., handling temporary selections in PICK state)
+
+## State Pattern Benefits
+
+Implementing the State pattern has provided several benefits:
+
+1. **Better code organization**: State-specific logic is now encapsulated in dedicated classes
+2. **Improved maintainability**: Adding new states or modifying existing state behavior is simpler
+3. **Enhanced readability**: The code is now more self-documenting
+4. **Reduced complexity**: The Session class is now less complex with fewer responsibilities
+5. **More flexibility**: New behaviors can be added to specific states without affecting others
+6. **Elimination of switch statements**: Removed complex conditional logic from the Session class
+7. **Explicit state transitions**: State changes are now more explicit and easier to follow
