@@ -78,6 +78,8 @@ The application uses Handlebars templates to generate prompts for the LLM, with 
 - `green.hbs`: Evaluates if the implementation makes the test pass
 - `refactor.hbs`: Evaluates code quality improvements
 
+The "Help Me" hint feature also adopts the same color scheme as the main feedback, using matching border colors to provide a consistent visual experience.
+
 ### 4. LLM Integration
 
 The LLM service:
@@ -90,7 +92,9 @@ The LLM service:
 The UI follows the layout specified in the requirements:
 - Top panel displays context (current state)
 - Middle panels show test cases (with scrollable overflow), production code, and test code
-- Coach feedback section below the code editors
+- Coach feedback section below the code editors with color-coded backgrounds:
+  - Light green with black text when feedback indicates progression (proceed: "yes")
+  - Light pink with black text when feedback indicates improvement needed (proceed: "no")
 - Bottom panel contains action buttons
 
 All panels maintain consistent fixed heights with scrollable content areas to ensure the action buttons remain visible regardless of content size.
@@ -102,14 +106,14 @@ HTMX is used for dynamic updates without a separate frontend framework.
 1. User selects a test case or submits code
 2. Server updates session state and generates appropriate LLM prompt
 3. LLM evaluates code and returns structured feedback
-4. Server processes feedback using state-specific logic
+4. Server processes feedback using state-specific logic and applies visual styling (green/pink) based on the "proceed" field 
 5. If feedback processing indicates success, session advances to next state
 
 ## Future Enhancements
 
 1. **Multiple Katas**: Add support for additional kata exercises beyond FizzBuzz
 2. **User Accounts**: Save progress and history across sessions
-3. **Enhanced Feedback**: More detailed, visual feedback on test execution
+3. **Enhanced Feedback**: Additional feedback enhancements like animated transitions or success celebrations
 4. **Code Execution**: Run tests in a sandbox to verify they actually fail/pass
 5. **Offline Mode**: Allow for practicing without an internet connection
 6. **Customizable Prompts**: Allow instructors to customize coaching style

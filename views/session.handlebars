@@ -16,6 +16,17 @@
         max-height: 150px;
         overflow-y: auto;
     }
+    
+    /* Feedback status colors */
+    .feedback-proceed-yes {
+        background-color: #d4edda; /* Light green */
+        color: #155724; /* Dark green text for contrast */
+    }
+    
+    .feedback-proceed-no {
+        background-color: #f8d7da; /* Light pink */
+        color: #721c24; /* Dark red text for contrast */
+    }
 </style>
 
 <div class="row mb-3">
@@ -97,7 +108,17 @@
                 <div class="card-header">
                     <h3 class="h6 mb-0">Coach Feedback</h3>
                 </div>
-                <div class="card-body feedback-container">
+                <div class="card-body feedback-container
+                    {{#if feedback}}
+                        {{#if proceed}}
+                            {{#if (eq proceed 'yes')}}
+                                feedback-proceed-yes
+                            {{else}}
+                                feedback-proceed-no
+                            {{/if}}
+                        {{/if}}
+                    {{/if}}
+                ">
                     <div id="coach-feedback">
                         {{#if feedback}}
                         <p>{{feedback}}</p>
@@ -105,7 +126,7 @@
                         <p class="text-muted">Submit your work to get feedback from the coach.</p>
                         {{/if}}
                     </div>
-                    <div id="hint" class="mt-2 p-2 border-start border-info border-3 d-none"></div>
+                    <div id="hint" class="mt-2 p-2 border-start border-3 d-none" style="border-color: inherit;"></div>
                 </div>
             </div>
         </div>
@@ -114,7 +135,7 @@
     <div class="row mt-2">
         <div class="col-12 text-center">
             <button type="submit" class="btn btn-primary">Submit</button>
-            <button type="button" id="help-btn" class="btn btn-secondary ms-2" hx-post="/session/hint" hx-target="#hint" hx-vals='{"sessionId": "{{sessionId}}"}'>Help Me</button>
+            <button type="button" id="help-btn" class="btn btn-secondary ms-2" hx-post="/session/hint" hx-swap="none" hx-vals='{"sessionId": "{{sessionId}}"}'>Help Me</button>
         </div>
     </div>
 </form>
@@ -152,9 +173,34 @@
             window.testEditor.save();
         });
         
-        // Handle hint visibility
-        document.getElementById('help-btn').addEventListener('click', function() {
-            document.getElementById('hint').classList.remove('d-none');
+        // Handle hint retrieval, visibility and styling
+        document.addEventListener('htmx:afterRequest', function(event) {
+            // Check if this is a hint request
+            if (event.detail.requestConfig && 
+                event.detail.requestConfig.path && 
+                event.detail.requestConfig.path.includes('/session/hint')) {
+                
+                try {
+                    // Parse the response
+                    const response = JSON.parse(event.detail.xhr.responseText);
+                    const hintElement = document.getElementById('hint');
+                    
+                    // Set the hint text
+                    hintElement.textContent = response.hint;
+                    hintElement.classList.remove('d-none');
+                    
+                    // Apply appropriate border color based on proceed value
+                    if (response.proceed === 'yes') {
+                        hintElement.style.borderColor = '#155724'; // dark green
+                    } else if (response.proceed === 'no') {
+                        hintElement.style.borderColor = '#721c24'; // dark red
+                    } else {
+                        hintElement.style.borderColor = '#0d6efd'; // default blue
+                    }
+                } catch (error) {
+                    console.error('Error processing hint response:', error);
+                }
+            }
         });
     });
 </script>

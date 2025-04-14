@@ -4,7 +4,7 @@
 2. **Visibility of Actions**: Ensure action buttons remain visible at all times
 3. **Feedback Location**: Place feedback near the relevant action buttons
 4. **Progressive Disclosure**: Reveal information in a logical sequence matching the TDD flow
-5. **Visual Status**: Clearly indicate the current state and status of test cases
+5. **Visual Status**: Clearly indicate the current state and status of test cases with color coding for feedback (green for proceed, pink for needs improvement)
 6. **CSS Organization**: Use specific classes over inline styles for consistent styling
 
 # AI Rules for TDD Coach Project

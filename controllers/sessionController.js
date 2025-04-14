@@ -18,7 +18,8 @@ exports.newSession = (req, res) => {
     productionCode: session.productionCode,
     testCode: session.testCode,
     feedback: "Welcome to the FizzBuzz kata! Let's get started with TDD.",
-    selectedTestIndex: null
+    selectedTestIndex: null,
+    proceed: null // No proceed value for initial welcome message
   });
 };
 
@@ -59,7 +60,8 @@ exports.submitCode = async (req, res) => {
       productionCode: session.productionCode,
       testCode: session.testCode,
       feedback: feedback.comments,
-      selectedTestIndex: session.selectedTestIndex
+      selectedTestIndex: session.selectedTestIndex,
+      proceed: feedback.proceed // Pass proceed value to the view
     });
   } catch (error) {
     console.error('Error getting LLM feedback:', error);
@@ -82,8 +84,11 @@ exports.getHint = async (req, res) => {
     // Get LLM hint
     const feedback = await getLlmFeedback(prompt);
     
-    // Return just the hint
-    res.json({ hint: feedback.hint });
+    // Return the hint and the proceed value for styling
+    res.json({ 
+      hint: feedback.hint,
+      proceed: feedback.proceed 
+    });
   } catch (error) {
     console.error('Error getting hint:', error);
     res.status(500).send('Error getting hint');
@@ -104,6 +109,7 @@ exports.restartSession = (req, res) => {
     productionCode: session.productionCode,
     testCode: session.testCode,
     feedback: "Session restarted. Let's begin again!",
-    selectedTestIndex: null
+    selectedTestIndex: null,
+    proceed: null // No proceed value for restart message
   });
 };

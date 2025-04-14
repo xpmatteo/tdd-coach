@@ -38,12 +38,12 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
 ## Features
 
 - Interactive UI with code editors
-- Real-time AI coaching feedback
+- Real-time AI coaching feedback with visual progress indicators
 - Step-by-step TDD guidance
 - Hint system for when you get stuck
 - Progress tracking for test cases
 - Two-step test selection process (select → confirm)
-- Dedicated coach feedback area
+- Dedicated coach feedback area with color-coded progress status (green for proceed, red for needs improvement)
 
 ## Technology Stack
 
