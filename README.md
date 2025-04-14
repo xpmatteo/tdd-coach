@@ -55,13 +55,8 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
 
 ## Project Structure
 
-- `/controllers` - Route handlers and application logic
-- `/models` - Data models and kata definitions
-- `/public` - Static assets (CSS, JavaScript)
-- `/routes` - Express routes
-- `/services` - Business logic for LLM integration and prompts
-- `/templates` - Handlebars templates for LLM prompts
-- `/views` - Handlebars templates for UI
+See `DESIGN.md` for a detailed overview of the project structure and architecture.
+See `AI_RULES.md` for coding standards and guidelines for AI coding assistants.
 
 ## Development
 

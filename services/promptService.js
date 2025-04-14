@@ -11,16 +11,16 @@ Object.keys(handlebarsHelpers).forEach(helperName => {
 // Load and compile prompt templates
 const promptTemplates = {
   PICK: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../templates/prompts/pick.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/pick.hbs'), 'utf8'
   )),
   RED: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../templates/prompts/red.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/red.hbs'), 'utf8'
   )),
   GREEN: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../templates/prompts/green.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/green.hbs'), 'utf8'
   )),
   REFACTOR: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../templates/prompts/refactor.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/refactor.hbs'), 'utf8'
   ))
 };
 
@@ -33,12 +33,12 @@ exports.getPrompt = (session) => {
   if (!promptTemplates[session.state]) {
     throw new Error(`No prompt template for state: ${session.state}`);
   }
-  
+
   // Determine current test case being worked on
   const currentTest = session.currentTestIndex !== null
     ? session.testCases[session.currentTestIndex]
     : null;
-  
+
   // Prepare context for template
   const context = {
     state: session.state,
@@ -49,7 +49,7 @@ exports.getPrompt = (session) => {
     currentTest,
     selectedTestIndex: session.selectedTestIndex
   };
-  
+
   // Apply template with context
   return promptTemplates[session.state](context);
 };

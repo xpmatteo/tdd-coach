@@ -43,7 +43,7 @@ Maintain the established project structure:
 /public           - Static assets (CSS, client-side JS)
 /routes           - Express routes
 /services         - Integration with external services (LLM)
-/templates        - Handlebars templates for LLM prompts
+/prompts          - Handlebars templates for LLM prompts
 /views            - Handlebars templates for UI
 /tests            - Test files
 ```
