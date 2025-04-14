@@ -41,12 +41,13 @@ Maintain the established project structure:
 /helpers          - Utility functions and handlebars helpers
 /models           - Data models and business logic
 /public           - Static assets (CSS, client-side JS)
-/routes           - Express routes
 /services         - Integration with external services (LLM)
 /prompts          - Handlebars templates for LLM prompts
 /views            - Handlebars templates for UI
 /tests            - Test files
 ```
+
+Routes are defined directly in app.js since we have a small number of endpoints.
 
 ## Technology Guidelines
 

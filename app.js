@@ -12,8 +12,7 @@ const handlebarsHelpers = require('./helpers/handlebars-helpers');
 const bodyParser = require('body-parser');
 const path = require('path');
 
-// Routes
-const sessionRoutes = require('./routes/session');
+const sessionController = require('./controllers/sessionController');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,12 +30,15 @@ app.set('view engine', 'handlebars');
 app.set('views', './views');
 
 // Routes
-app.use('/session', sessionRoutes);
-
-// Home route
 app.get('/', (req, res) => {
   res.render('home');
 });
+
+// Session routes
+app.get('/session/new', sessionController.newSession);
+app.post('/session/submit', sessionController.submitCode);
+app.post('/session/hint', sessionController.getHint);
+app.post('/session/restart', sessionController.restartSession);
 
 // Start server
 app.listen(PORT, () => {
