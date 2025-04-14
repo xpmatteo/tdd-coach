@@ -47,18 +47,7 @@ exports.submitCode = async (req, res) => {
     const feedback = await getLlmFeedback(prompt);
     
     // Process feedback and update session state if needed
-    if (feedback.proceed === 'yes') {
-      // If in PICK state and a test case was selected, mark it as in progress
-      if (session.state === 'PICK' && session.selectedTestIndex !== null) {
-        try {
-          session.selectTestCase(parseInt(session.selectedTestIndex, 10));
-          // Clear the selectedTestIndex as we're moving to the RED state
-          session.selectedTestIndex = null;
-        } catch (error) {
-          return res.status(400).send(error.message);
-        }
-      }
-      
+    if (session.processSubmission(feedback) && feedback.proceed === 'yes') {
       session.advanceState();
     }
     

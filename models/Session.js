@@ -1,6 +1,11 @@
 const katas = require('./katas');
+const PickState = require('./states/PickState');
 
 class Session {
+  /**
+   * Create a new TDD session
+   * @param {string} kataName - The name of the kata to use
+   */
   constructor(kataName) {
     const kata = katas[kataName];
     if (!kata) {
@@ -8,57 +13,57 @@ class Session {
     }
     
     this.kataName = kataName;
-    this.state = 'PICK'; // PICK, RED, GREEN, REFACTOR
     this.testCases = [...kata.testCases]; // Clone test cases
     this.productionCode = kata.initialProductionCode || '';
     this.testCode = kata.initialTestCode || '';
     this.currentTestIndex = null;
     this.selectedTestIndex = null;
+    
+    // Initialize with PICK state
+    this.setCurrentState(new PickState(this));
   }
   
   /**
-   * Advances the state machine to the next state
-   * PICK -> RED -> GREEN -> REFACTOR -> PICK
+   * Set the current state of the session
+   * @param {State} state - The new state object
+   * @returns {string} The name of the new state
    */
-  advanceState() {
-    switch (this.state) {
-      case 'PICK':
-        this.state = 'RED';
-        break;
-      case 'RED':
-        this.state = 'GREEN';
-        break;
-      case 'GREEN':
-        this.state = 'REFACTOR';
-        break;
-      case 'REFACTOR':
-        // Mark current test as done
-        if (this.currentTestIndex !== null) {
-          this.testCases[this.currentTestIndex].status = 'DONE';
-          this.currentTestIndex = null;
-        }
-        
-        // If there are still tests to do, go back to PICK
-        if (this.testCases.some(test => test.status === 'TODO')) {
-          this.state = 'PICK';
-        } else {
-          this.state = 'COMPLETE';
-        }
-        break;
-      default:
-        this.state = 'PICK';
+  setCurrentState(state) {
+    if (this.currentState) {
+      this.currentState.onExit();
     }
     
+    this.currentState = state;
+    this.state = state.getName(); // Keep for backward compatibility
+    
+    this.currentState.onEnter();
     return this.state;
   }
   
   /**
-   * Selects a test case to work on
+   * Advance to the next state in the TDD cycle
+   * @returns {string} The name of the new state
+   */
+  advanceState() {
+    const nextState = this.currentState.getNextState();
+    return this.setCurrentState(nextState);
+  }
+  
+  /**
+   * Check if test case selection is allowed in the current state
+   * @returns {boolean} True if test case selection is allowed
+   */
+  canSelectTestCase() {
+    return this.currentState.canSelectTestCase();
+  }
+  
+  /**
+   * Select a test case to work on
    * @param {number} index - Index of the test case to select
    */
   selectTestCase(index) {
-    if (this.state !== 'PICK') {
-      throw new Error('Can only select test case in PICK state');
+    if (!this.canSelectTestCase()) {
+      throw new Error(`Cannot select test case in ${this.state} state`);
     }
     
     if (index < 0 || index >= this.testCases.length) {
@@ -71,6 +76,15 @@ class Session {
     
     this.currentTestIndex = index;
     this.testCases[index].status = 'IN_PROGRESS';
+  }
+  
+  /**
+   * Process LLM feedback for the current state
+   * @param {Object} feedback - The feedback from the LLM
+   * @returns {boolean} Whether to advance to the next state
+   */
+  processSubmission(feedback) {
+    return this.currentState.processSubmission(feedback);
   }
 }
 
