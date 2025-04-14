@@ -1,10 +1,18 @@
 const Session = require('../models/Session');
+const katas = require('../models/katas');
 
 describe('Session', () => {
   let session;
 
   beforeEach(() => {
     session = new Session('fizzbuzz');
+  });
+
+  test('test cases should be cloned from kata', () => {
+    const originalTestCases = katas.fizzbuzz.testCases;
+    session.testCases[0].status = 'DONE'; // Modify the cloned test case
+    expect(session.testCases[0].status).toBe('DONE');
+    expect(originalTestCases[0].status).toBe('TODO'); // Original should remain unchanged
   });
 
   test('should initialize with correct state', () => {
@@ -19,15 +27,15 @@ describe('Session', () => {
     expect(session.state).toBe('PICK');
     session.advanceState();
     expect(session.state).toBe('RED');
-    
+
     // RED -> GREEN
     session.advanceState();
     expect(session.state).toBe('GREEN');
-    
+
     // GREEN -> REFACTOR
     session.advanceState();
     expect(session.state).toBe('REFACTOR');
-    
+
     // REFACTOR -> PICK (if more tests remain)
     session.advanceState();
     expect(session.state).toBe('PICK');
@@ -45,7 +53,7 @@ describe('Session', () => {
     session.advanceState(); // RED -> GREEN
     session.advanceState(); // GREEN -> REFACTOR
     session.advanceState(); // REFACTOR -> PICK
-    
+
     expect(session.testCases[0].status).toBe('DONE');
     expect(session.currentTestIndex).toBeNull();
   });
@@ -59,7 +67,7 @@ describe('Session', () => {
       session.advanceState(); // GREEN -> REFACTOR
       session.advanceState(); // REFACTOR -> PICK/COMPLETE
     }
-    
+
     expect(session.state).toBe('COMPLETE');
   });
 
@@ -74,7 +82,7 @@ describe('Session', () => {
     expect(() => {
       session.selectTestCase(-1);
     }).toThrow();
-    
+
     expect(() => {
       session.selectTestCase(999);
     }).toThrow();

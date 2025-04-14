@@ -11,18 +11,18 @@ class Session {
     if (!kata) {
       throw new Error(`Kata ${kataName} not found`);
     }
-    
+
     this.kataName = kataName;
-    this.testCases = [...kata.testCases]; // Clone test cases
+    this.testCases = structuredClone(kata.testCases); // Deep copy test cases
     this.productionCode = kata.initialProductionCode || '';
     this.testCode = kata.initialTestCode || '';
     this.currentTestIndex = null;
     this.selectedTestIndex = null;
-    
+
     // Initialize with PICK state
     this.setCurrentState(new PickState(this));
   }
-  
+
   /**
    * Set the current state of the session
    * @param {State} state - The new state object
@@ -32,14 +32,14 @@ class Session {
     if (this.currentState) {
       this.currentState.onExit();
     }
-    
+
     this.currentState = state;
     this.state = state.getName(); // Keep for backward compatibility
-    
+
     this.currentState.onEnter();
     return this.state;
   }
-  
+
   /**
    * Advance to the next state in the TDD cycle
    * @returns {string} The name of the new state
@@ -48,7 +48,7 @@ class Session {
     const nextState = this.currentState.getNextState();
     return this.setCurrentState(nextState);
   }
-  
+
   /**
    * Check if test case selection is allowed in the current state
    * @returns {boolean} True if test case selection is allowed
@@ -56,7 +56,7 @@ class Session {
   canSelectTestCase() {
     return this.currentState.canSelectTestCase();
   }
-  
+
   /**
    * Select a test case to work on
    * @param {number} index - Index of the test case to select
@@ -65,19 +65,19 @@ class Session {
     if (!this.canSelectTestCase()) {
       throw new Error(`Cannot select test case in ${this.state} state`);
     }
-    
+
     if (index < 0 || index >= this.testCases.length) {
       throw new Error('Invalid test case index');
     }
-    
+
     if (this.testCases[index].status !== 'TODO') {
-      throw new Error('Test case already completed or in progress');
+      throw new Error(`Test case not in TODO state: ${this.testCases[index].status}`);
     }
-    
+
     this.currentTestIndex = index;
     this.testCases[index].status = 'IN_PROGRESS';
   }
-  
+
   /**
    * Process LLM feedback for the current state
    * @param {Object} feedback - The feedback from the LLM
