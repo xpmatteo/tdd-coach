@@ -19,7 +19,8 @@ exports.newSession = (req, res) => {
     testCode: session.testCode,
     feedback: "Welcome to the FizzBuzz kata! Let's get started with TDD.",
     selectedTestIndex: null,
-    proceed: null // No proceed value for initial welcome message
+    proceed: null, // No proceed value for initial welcome message
+    tokenUsage: session.tokenUsage.getStats()
   });
 };
 
@@ -44,8 +45,8 @@ exports.submitCode = async (req, res) => {
   const prompt = getPrompt(session);
   
   try {
-    // Get LLM feedback
-    const feedback = await getLlmFeedback(prompt);
+    // Get LLM feedback with token tracking
+    const feedback = await getLlmFeedback(prompt, session.tokenUsage);
     
     // Process feedback and update session state if needed
     if (session.processSubmission(feedback) && feedback.proceed === 'yes') {
@@ -61,7 +62,8 @@ exports.submitCode = async (req, res) => {
       testCode: session.testCode,
       feedback: feedback.comments,
       selectedTestIndex: session.selectedTestIndex,
-      proceed: feedback.proceed // Pass proceed value to the view
+      proceed: feedback.proceed, // Pass proceed value to the view
+      tokenUsage: session.tokenUsage.getStats()
     });
   } catch (error) {
     console.error('Error getting LLM feedback:', error);
@@ -81,8 +83,8 @@ exports.getHint = async (req, res) => {
   const prompt = getPrompt(session);
   
   try {
-    // Get LLM hint
-    const feedback = await getLlmFeedback(prompt);
+    // Get LLM hint with token tracking
+    const feedback = await getLlmFeedback(prompt, session.tokenUsage);
     
     // Return the hint and the proceed value for styling
     res.json({ 
@@ -110,6 +112,7 @@ exports.restartSession = (req, res) => {
     testCode: session.testCode,
     feedback: "Session restarted. Let's begin again!",
     selectedTestIndex: null,
-    proceed: null // No proceed value for restart message
+    proceed: null, // No proceed value for restart message
+    tokenUsage: session.tokenUsage.getStats()
   });
 };

@@ -1,5 +1,6 @@
 const katas = require('./katas');
 const PickState = require('./states/PickState');
+const TokenUsage = require('./TokenUsage');
 
 class Session {
   /**
@@ -21,6 +22,9 @@ class Session {
 
     // Initialize with PICK state
     this.setCurrentState(new PickState(this));
+    
+    // Initialize token usage tracking
+    this.tokenUsage = new TokenUsage();
   }
 
   /**

@@ -52,7 +52,8 @@ class TokenUsage {
    * @returns {string} Cost formatted as currency
    */
   getFormattedCost() {
-    return `$${this.getEstimatedCost().toFixed(6)}`;
+    // Format with fewer decimal places for UI display, and use dollar sign
+    return `$${this.getEstimatedCost().toFixed(4)}`;
   }
 
   /**
