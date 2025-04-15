@@ -1,10 +1,14 @@
 # TDD Coach
 
-A program that helps people learn Test-Driven Development through katas with AI coaching.
+A program that helps people practice Test-Driven Development through katas with AI coaching.
+
+  <img src="./docs/tdd%20coach%203.png" alt="TDD Coach screenshot" width="600" style="padding-bottom: 2em;">
+
+  <img src="./docs/tdd-coach%206.png" alt="TDD Coach screenshot" width="600">
 
 ## Description
 
-The TDD Coach guides users through implementing coding katas using the Test-Driven Development approach. It follows the TDD cycle:
+The TDD Coach guides users through implementing coding katas using Test-Driven Development. It follows the TDD cycle:
 
 1. **PICK**: Select a test case to implement
 2. **RED**: Write a failing test
