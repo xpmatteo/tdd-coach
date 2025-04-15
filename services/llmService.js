@@ -4,6 +4,9 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+const CHEAP_MODEL = 'claude-3-5-haiku-20241022';
+const BEST_MODEL = 'claude-3-5-sonnet-20240620';
+
 /**
  * Gets feedback from the LLM using the provided prompt
  * @param {string} prompt - The fully formatted prompt to send
@@ -16,7 +19,7 @@ exports.getLlmFeedback = async (prompt, tokenUsage) => {
     console.log('Prompt:', prompt);
     console.log('--------');
     const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20240620',
+      model: BEST_MODEL,
       max_tokens: 1000,
       messages: [
         { role: 'user', content: prompt }
@@ -26,11 +29,11 @@ exports.getLlmFeedback = async (prompt, tokenUsage) => {
     console.log('--------');
     console.log(response.content[0].text);
     console.log('--------');
-    
+
     // Track token usage if a tracker was provided
     if (tokenUsage) {
       tokenUsage.addUsage(
-        response.usage.input_tokens, 
+        response.usage.input_tokens,
         response.usage.output_tokens
       );
       console.log(`Token usage: ${response.usage.input_tokens} input, ${response.usage.output_tokens} output`);
