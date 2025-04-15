@@ -37,6 +37,7 @@ The session tracks:
 - Production and test code
 - The currently selected test case
 - The temporarily selected test case (when in PICK state before confirmation)
+- Token usage for LLM interactions with cost estimation
 
 The PICK state implements a two-step selection process:
 1. User selects a test case (which is stored but not yet marked as IN_PROGRESS)
@@ -86,11 +87,12 @@ The LLM service:
 - Sends formatted prompts to the Anthropic Claude API
 - Requests responses in JSON format
 - Extracts feedback comments, hints, and a binary proceed/don't proceed signal
+- Tracks token usage and calculates estimated costs based on Anthropic's pricing
 
 ### 5. UI Architecture
 
 The UI follows the layout specified in the requirements:
-- Top panel displays context (current state)
+- Top panel displays context (current state) and token usage cost (in the top right)
 - Middle panels show test cases (with scrollable overflow), production code, and test code
 - Coach feedback section below the code editors with color-coded backgrounds:
   - Light green with black text when feedback indicates progression (proceed: "yes")
