@@ -8,16 +8,22 @@
     "dev": "nodemon app.js",
     "test": "jest"
   },
-  "keywords": ["tdd", "coach", "kata", "llm"],
+  "keywords": [
+    "tdd",
+    "coach",
+    "kata",
+    "llm"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
-    "express": "^4.18.2",
-    "express-handlebars": "^7.1.2",
     "body-parser": "^1.20.2",
     "dotenv": "^16.3.1",
-    "handlebars": "^4.7.8"
+    "express": "^4.18.2",
+    "express-handlebars": "^7.1.2",
+    "handlebars": "^4.7.8",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",

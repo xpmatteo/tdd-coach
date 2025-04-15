@@ -2,6 +2,7 @@ const { getPrompt } = require('../services/promptService');
 const { getLlmFeedback } = require('../services/llmService');
 const Session = require('../models/Session');
 const testCaptureManager = require('../models/testCapture/TestCaptureManager');
+const { v4: uuidv4 } = require('uuid');
 
 // Store active sessions in memory (replace with proper storage in production)
 const sessions = new Map();
@@ -11,7 +12,7 @@ exports.sessions = sessions;
 
 exports.newSession = (req, res) => {
   // Create a new session for FizzBuzz kata
-  const sessionId = Date.now().toString();
+  const sessionId = uuidv4();
   const session = new Session('fizzbuzz');
   sessions.set(sessionId, session);
   
