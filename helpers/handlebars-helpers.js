@@ -57,5 +57,20 @@ module.exports = {
   lookup: function(array, index, prop) {
     if (!array || !array[index]) return '';
     return prop ? array[index][prop] : array[index];
+  },
+  
+  /**
+   * Format date helper
+   * Usage: {{formatDate dateString}}
+   */
+  formatDate: function(dateString) {
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    } catch (error) {
+      return dateString;
+    }
   }
 };

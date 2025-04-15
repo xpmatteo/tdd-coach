@@ -139,6 +139,12 @@
         <div class="col-12 text-center">
             <button type="submit" class="btn btn-primary">Submit</button>
             <button type="button" id="help-btn" class="btn btn-secondary ms-2" hx-post="/session/hint" hx-swap="none" hx-vals='{"sessionId": "{{sessionId}}"}'>Help Me</button>
+            
+            {{#if isTestingModeEnabled}}
+                <a href="/prompt-tests/save" class="btn btn-info ms-2 {{#unless feedback}}disabled{{/unless}}">
+                    Save as Prompt Test
+                </a>
+            {{/if}}
         </div>
     </div>
 </form>

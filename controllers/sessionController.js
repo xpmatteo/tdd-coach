@@ -1,6 +1,7 @@
 const { getPrompt } = require('../services/promptService');
 const { getLlmFeedback } = require('../services/llmService');
 const Session = require('../models/Session');
+const testCaptureManager = require('../models/testCapture/TestCaptureManager');
 
 // Store active sessions in memory (replace with proper storage in production)
 const sessions = new Map();
@@ -20,7 +21,8 @@ exports.newSession = (req, res) => {
     feedback: "Welcome to the FizzBuzz kata! Let's get started with TDD.",
     selectedTestIndex: null,
     proceed: null, // No proceed value for initial welcome message
-    tokenUsage: session.tokenUsage.getStats()
+    tokenUsage: session.tokenUsage.getStats(),
+    isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
   });
 };
 
@@ -48,6 +50,19 @@ exports.submitCode = async (req, res) => {
     // Get LLM feedback with token tracking
     const feedback = await getLlmFeedback(prompt, session.tokenUsage);
     
+    // Capture interaction if test capture mode is enabled
+    if (testCaptureManager.isTestingModeEnabled()) {
+      testCaptureManager.captureInteraction({
+        state: session.state,
+        productionCode: session.productionCode,
+        testCode: session.testCode,
+        testCases: session.testCases,
+        selectedTestIndex: session.selectedTestIndex,
+        currentTestIndex: session.currentTestIndex,
+        llmResponse: feedback
+      });
+    }
+    
     // Process feedback and update session state if needed
     if (session.processSubmission(feedback) && feedback.proceed === 'yes') {
       session.advanceState();
@@ -63,7 +78,8 @@ exports.submitCode = async (req, res) => {
       feedback: feedback.comments,
       selectedTestIndex: session.selectedTestIndex,
       proceed: feedback.proceed, // Pass proceed value to the view
-      tokenUsage: session.tokenUsage.getStats()
+      tokenUsage: session.tokenUsage.getStats(),
+      isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
     });
   } catch (error) {
     console.error('Error getting LLM feedback:', error);
@@ -113,6 +129,7 @@ exports.restartSession = (req, res) => {
     feedback: "Session restarted. Let's begin again!",
     selectedTestIndex: null,
     proceed: null, // No proceed value for restart message
-    tokenUsage: session.tokenUsage.getStats()
+    tokenUsage: session.tokenUsage.getStats(),
+    isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
   });
 };

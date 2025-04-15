@@ -13,6 +13,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 const sessionController = require('./controllers/sessionController');
+const testCaptureController = require('./controllers/testCaptureController');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,8 +41,25 @@ app.post('/session/submit', sessionController.submitCode);
 app.post('/session/hint', sessionController.getHint);
 app.post('/session/restart', sessionController.restartSession);
 
+// Test Capture routes
+app.get('/prompt-tests', testCaptureController.listTestCases);
+app.get('/prompt-tests/save', testCaptureController.showSaveForm);
+app.post('/prompt-tests/save', testCaptureController.saveTestCase);
+app.get('/prompt-tests/:filename', testCaptureController.viewTestCase);
+app.post('/prompt-tests/:filename/delete', testCaptureController.deleteTestCase);
+
+// Initialize test capture system
+const testCaptureManager = require('./models/testCapture/TestCaptureManager');
+testCaptureManager.initialize().catch(err => {
+  console.error('Failed to initialize test capture system:', err);
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`TDD Coach app listening at http://localhost:${PORT}`);
   console.log('Using Anthropic API key:', process.env.ANTHROPIC_API_KEY.substring(0, 5) + '...');
+  
+  if (process.env.TEST_CAPTURE_MODE === 'true') {
+    console.log('🔴 Test Capture Mode ENABLED');
+  }
 });

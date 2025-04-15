@@ -1,0 +1,40 @@
+<div class="save-test-case">
+  <h1>Save as Test Case</h1>
+  
+  <div class="capture-summary">
+    <h2>Interaction Summary</h2>
+    <div class="metadata">
+      <p><strong>State:</strong> <span class="state-badge">{{capture.state}}</span></p>
+      <p><strong>Timestamp:</strong> {{formatDate capture.timestamp}}</p>
+      <p><strong>Result:</strong> 
+        <span class="{{#if (eq capture.llmResponse.proceed 'yes')}}proceed-yes{{else}}proceed-no{{/if}}">
+          {{capture.llmResponse.proceed}}
+        </span>
+      </p>
+      
+      {{#if capture.currentTestIndex}}
+        <p><strong>Test Case:</strong> {{capture.testCases.[capture.currentTestIndex].description}}</p>
+      {{/if}}
+    </div>
+  </div>
+  
+  <form method="POST" action="/test-cases/save" class="save-form">
+    <div class="form-group">
+      <label for="test-case-name">Test Case Name:</label>
+      <input 
+        type="text" 
+        id="test-case-name" 
+        name="name" 
+        required 
+        placeholder="Enter a descriptive name for this test case"
+        value="{{capture.state}}_{{#if capture.currentTestIndex}}{{capture.testCases.[capture.currentTestIndex].description}}{{else}}interaction{{/if}}"
+      >
+      <p class="input-help">Choose a descriptive name that helps identify this test case's purpose</p>
+    </div>
+    
+    <div class="form-actions">
+      <button type="submit" class="btn primary">Save Test Case</button>
+      <a href="/test-cases" class="btn">Cancel</a>
+    </div>
+  </form>
+</div>
