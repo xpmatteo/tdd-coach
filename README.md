@@ -49,6 +49,7 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
 - Two-step test selection process (select → confirm)
 - Dedicated coach feedback area with color-coded progress status (green for proceed, red for needs improvement)
 - Token usage tracking and cost estimation for LLM interactions (displays in the UI)
+- Prompt Testing System for capturing, managing, and analyzing test cases for LLM prompts
 
 ## Technology Stack
 
@@ -74,3 +75,16 @@ Run tests:
 ```
 npm test
 ```
+
+## Prompt Testing System
+
+The TDD Coach includes a comprehensive system for testing and improving the AI prompts. This feature helps capture real interactions, build a test suite, and analyze prompt performance over time.
+
+### Enabling Prompt Testing Mode
+
+1. Set `TEST_CAPTURE_MODE=true` in your `.env` file
+2. Restart the application
+3. Use the TDD Coach normally
+4. After receiving feedback, click "Save as Prompt Test"
+
+See [PROMPT_TESTING_SYSTEM.md](PROMPT_TESTING_SYSTEM.md) for detailed documentation.

@@ -8,14 +8,14 @@ exports.listTestCases = async (req, res) => {
     const testCases = await testCaptureManager.getTestCases();
     
     res.render('testCases/list', {
-      title: 'Test Case Capture - List',
+      title: 'Prompt Tests - List',
       testCases,
       isTestingModeEnabled: testCaptureManager.isTestingModeEnabled(),
       currentCapture: testCaptureManager.getCurrentCapture()
     });
   } catch (error) {
     console.error('Error listing test cases:', error);
-    res.status(500).send('Error loading test cases');
+    res.status(500).send('Error loading prompt tests');
   }
 };
 
@@ -28,14 +28,14 @@ exports.viewTestCase = async (req, res) => {
     const testCase = await testCaptureManager.getTestCase(filename);
     
     res.render('testCases/view', {
-      title: 'Test Case Details',
+      title: 'Prompt Test Details',
       testCase,
       filename,
       isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
     });
   } catch (error) {
     console.error('Error viewing test case:', error);
-    res.status(404).send('Test case not found or could not be loaded');
+    res.status(404).send('Prompt test not found or could not be loaded');
   }
 };
 
@@ -50,7 +50,7 @@ exports.showSaveForm = (req, res) => {
   }
   
   res.render('testCases/save', {
-    title: 'Save as Test Case',
+    title: 'Save as Prompt Test',
     capture: currentCapture,
     isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
   });
@@ -72,7 +72,7 @@ exports.saveTestCase = async (req, res) => {
     res.redirect(`/prompt-tests/${filename}`);
   } catch (error) {
     console.error('Error saving test case:', error);
-    res.status(500).send('Error saving test case');
+    res.status(500).send('Error saving prompt test');
   }
 };
 
@@ -87,10 +87,10 @@ exports.deleteTestCase = async (req, res) => {
     if (result) {
       res.redirect('/prompt-tests');
     } else {
-      res.status(500).send('Failed to delete test case');
+      res.status(500).send('Failed to delete prompt test');
     }
   } catch (error) {
     console.error('Error deleting test case:', error);
-    res.status(500).send('Error deleting test case');
+    res.status(500).send('Error deleting prompt test');
   }
 };
