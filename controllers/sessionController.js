@@ -16,6 +16,19 @@ exports.newSession = (req, res) => {
   const session = new Session('fizzbuzz');
   sessions.set(sessionId, session);
   
+  // Redirect to the session URL with ID
+  res.redirect(`/session/${sessionId}`);
+};
+
+exports.getSession = (req, res) => {
+  const sessionId = req.params.id;
+  const session = sessions.get(sessionId);
+  
+  if (!session) {
+    // Session not found, redirect to create a new one
+    return res.redirect('/session/new');
+  }
+  
   res.render('session', {
     sessionId,
     state: session.state,
@@ -23,7 +36,7 @@ exports.newSession = (req, res) => {
     testCases: session.testCases,
     productionCode: session.productionCode,
     testCode: session.testCode,
-    feedback: "Welcome to the FizzBuzz kata! Let's get started with TDD.",
+    feedback: session.feedback || "Welcome to the FizzBuzz kata! Let's get started with TDD.",
     selectedTestIndex: null,
     proceed: null, // No proceed value for initial welcome message
     tokenUsage: session.tokenUsage.getStats(),

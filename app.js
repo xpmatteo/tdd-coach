@@ -37,6 +37,7 @@ app.get('/', (req, res) => {
 
 // Session routes
 app.get('/session/new', sessionController.newSession);
+app.get('/session/:id', sessionController.getSession);
 app.post('/session/submit', sessionController.submitCode);
 app.post('/session/hint', sessionController.getHint);
 app.post('/session/restart', sessionController.restartSession);
