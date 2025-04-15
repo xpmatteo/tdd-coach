@@ -27,6 +27,49 @@
         background-color: #f8d7da; /* Light pink */
         color: #721c24; /* Dark red text for contrast */
     }
+    
+    /* Loading indicator styles */
+    .htmx-indicator {
+        display: none;
+    }
+    .htmx-request .htmx-indicator {
+        display: inline-block;
+    }
+    .htmx-request.htmx-indicator {
+        display: inline-block;
+    }
+    
+    /* Spinner animation */
+    .spinner {
+        display: inline-block;
+        width: 1.5rem;
+        height: 1.5rem;
+        vertical-align: middle;
+        border: 0.25em solid rgba(0, 123, 255, 0.3);
+        border-right-color: #007bff;
+        border-radius: 50%;
+        animation: spinner 0.75s linear infinite;
+    }
+    
+    /* Overlay for the feedback area while loading */
+    .feedback-loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+        border-radius: 0.25rem;
+    }
+    
+    @keyframes spinner {
+        to { transform: rotate(360deg); }
+    }
 </style>
 
 <div class="row mb-3">
@@ -49,7 +92,7 @@
     </div>
 </div>
 
-<form id="code-form" hx-post="/session/submit" hx-target="body">
+<form id="code-form" hx-post="/session/submit" hx-target="body" hx-indicator="#feedback-loading">
     <input type="hidden" name="sessionId" value="{{sessionId}}">
     
     <div class="row">
@@ -111,7 +154,7 @@
                 <div class="card-header">
                     <h3 class="h6 mb-0">Coach Feedback</h3>
                 </div>
-                <div class="card-body feedback-container
+                <div class="card-body feedback-container position-relative
                     {{#if feedback}}
                         {{#if proceed}}
                             {{#if (eq proceed 'yes')}}
@@ -122,6 +165,11 @@
                         {{/if}}
                     {{/if}}
                 ">
+                    <!-- Loading overlay for the feedback area -->
+                    <div id="feedback-loading" class="feedback-loading-overlay htmx-indicator" hx-indicator="this">
+                        <div class="spinner mb-2"></div>
+                    </div>
+                    
                     <div id="coach-feedback">
                         {{#if feedback}}
                         <p>{{feedback}}</p>
@@ -137,8 +185,19 @@
     
     <div class="row mt-2">
         <div class="col-12 text-center">
-            <button type="submit" class="btn btn-primary">Submit</button>
-            <button type="button" id="help-btn" class="btn btn-secondary ms-2" hx-post="/session/hint" hx-swap="none" hx-vals='{"sessionId": "{{sessionId}}"}'>Help Me</button>
+            <button type="submit" class="btn btn-primary">
+                Submit
+                <span class="htmx-indicator ms-1"><span class="spinner" style="width: 1rem; height: 1rem;"></span></span>
+            </button>
+            
+            <button type="button" id="help-btn" class="btn btn-secondary ms-2" 
+                    hx-post="/session/hint" 
+                    hx-swap="none" 
+                    hx-vals='{"sessionId": "{{sessionId}}"}'
+                    hx-indicator="#feedback-loading">
+                Help Me
+                <span class="htmx-indicator ms-1"><span class="spinner" style="width: 1rem; height: 1rem;"></span></span>
+            </button>
             
             {{#if isPromptCaptureModeEnabled}}
                 <a href="/prompt-tests/save?sessionId={{sessionId}}" class="btn btn-info ms-2 {{#unless feedback}}disabled{{/unless}}">
