@@ -1,4 +1,4 @@
-const { newSession, submitCode, getHint, restartSession } = require('../controllers/sessionController');
+const { newSession, submitCode, getHint, restartSession, getSession } = require('../controllers/sessionController');
 const { getLlmFeedback } = require('../services/llmService');
 
 // Mock dependencies
@@ -20,11 +20,13 @@ describe('SessionController', () => {
         sessionId: 'test-session-id',
         productionCode: 'test production code',
         testCode: 'test test code'
-      }
+      },
+      params: {}
     };
     
     res = {
       render: jest.fn(),
+      redirect: jest.fn(),
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
       json: jest.fn()
@@ -32,14 +34,37 @@ describe('SessionController', () => {
   });
 
   describe('newSession', () => {
-    test('should render session with initial data and null proceed value', () => {
+    test('should create a new session and redirect to session page with UUID', () => {
       // Arrange & Act
       newSession(req, res);
+      
+      // Assert
+      expect(res.redirect).toHaveBeenCalledWith(
+        expect.stringMatching(/^\/session\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
+      );
+    });
+  });
+
+  describe('getSession', () => {
+    test('should render session with initial data and null proceed value', () => {
+      // Arrange - Create a session first
+      newSession(req, res);
+      
+      // Extract the UUID from the redirect URL
+      const redirectUrl = res.redirect.mock.calls[0][0];
+      const sessionId = redirectUrl.split('/').pop();
+      
+      // Set up request with session ID param
+      req.params.id = sessionId;
+      
+      // Act
+      getSession(req, res);
       
       // Assert
       expect(res.render).toHaveBeenCalledWith(
         'session',
         expect.objectContaining({
+          sessionId,
           state: 'PICK',
           feedback: expect.any(String),
           proceed: null // Should have null proceed value for initial session
@@ -61,7 +86,8 @@ describe('SessionController', () => {
       
       // Create a new session first to have it in the controller's memory
       newSession(req, res);
-      const sessionId = res.render.mock.calls[0][1].sessionId;
+      const redirectUrl = res.redirect.mock.calls[0][0];
+      const sessionId = redirectUrl.split('/').pop();
       
       // Update req for submitCode
       req.body.sessionId = sessionId;
@@ -70,9 +96,8 @@ describe('SessionController', () => {
       await submitCode(req, res);
       
       // Assert
-      expect(res.render).toHaveBeenCalledTimes(2);
-      expect(res.render.mock.calls[1][0]).toBe('session');
-      expect(res.render.mock.calls[1][1]).toEqual(
+      expect(res.render).toHaveBeenCalledWith(
+        'session',
         expect.objectContaining({
           feedback: 'Test feedback',
           proceed: 'yes' // Should have proceed value from LLM feedback
@@ -92,7 +117,8 @@ describe('SessionController', () => {
       
       // Create a new session first to have it in the controller's memory
       newSession(req, res);
-      const sessionId = res.render.mock.calls[0][1].sessionId;
+      const redirectUrl = res.redirect.mock.calls[0][0];
+      const sessionId = redirectUrl.split('/').pop();
       
       // Update req for submitCode
       req.body.sessionId = sessionId;
@@ -101,9 +127,8 @@ describe('SessionController', () => {
       await submitCode(req, res);
       
       // Assert
-      expect(res.render).toHaveBeenCalledTimes(2);
-      expect(res.render.mock.calls[1][0]).toBe('session');
-      expect(res.render.mock.calls[1][1]).toEqual(
+      expect(res.render).toHaveBeenCalledWith(
+        'session',
         expect.objectContaining({
           feedback: 'You need to improve your test',
           proceed: 'no' // Should have proceed value from LLM feedback
@@ -125,7 +150,8 @@ describe('SessionController', () => {
       
       // Create a new session first to have it in the controller's memory
       newSession(req, res);
-      const sessionId = res.render.mock.calls[0][1].sessionId;
+      const redirectUrl = res.redirect.mock.calls[0][0];
+      const sessionId = redirectUrl.split('/').pop();
       
       // Update req for getHint
       req.body = { sessionId };
@@ -145,13 +171,14 @@ describe('SessionController', () => {
     test('should render session with null proceed value', () => {
       // Arrange - Create a session first
       newSession(req, res);
-      const sessionId = res.render.mock.calls[0][1].sessionId;
+      const redirectUrl = res.redirect.mock.calls[0][0];
+      const sessionId = redirectUrl.split('/').pop();
       
       // Update req for restartSession
       req.body = { sessionId };
       
-      // Reset render mock to check only the restart call
-      res.render.mockClear();
+      // Reset redirect mock to check only the restart call
+      res.redirect.mockClear();
       
       // Act
       restartSession(req, res);
