@@ -122,20 +122,22 @@ exports.restartSession = (req, res) => {
   const { sessionId } = req.body;
   
   // Create a fresh session
-  const session = new Session('fizzbuzz');
-  sessions.set(sessionId, session);
+  const oldSession = sessions.get(sessionId);
+  const newSession = new Session('fizzbuzz');
+  newSession.tokenUsage = oldSession.tokenUsage; // Keep the same token usage tracker
+  sessions.set(sessionId, newSession);
   
   res.render('session', {
     sessionId,
-    state: session.state,
-    stateDescription: session.getStateDescription(),
-    testCases: session.testCases,
-    productionCode: session.productionCode,
-    testCode: session.testCode,
+    state: newSession.state,
+    stateDescription: newSession.getStateDescription(),
+    testCases: newSession.testCases,
+    productionCode: newSession.productionCode,
+    testCode: newSession.testCode,
     feedback: "Session restarted. Let's begin again!",
     selectedTestIndex: null,
     proceed: null, // No proceed value for restart message
-    tokenUsage: session.tokenUsage.getStats(),
+    tokenUsage: newSession.tokenUsage.getStats(),
     isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
   });
 };
