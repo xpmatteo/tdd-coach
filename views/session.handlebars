@@ -33,7 +33,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h2 class="h5 mb-0">Current State: <span class="badge bg-primary">{{state}}</span></h2>
+                <h2 class="h5 mb-0">{{stateDescription}}</h2>
                 <div class="d-flex align-items-center">
                     <span class="badge bg-info me-3">LLM Cost: {{tokenUsage.formattedCost}}</span>
                     <form hx-post="/session/restart" hx-target="body">

@@ -120,6 +120,14 @@ class Session {
   processSubmission(feedback) {
     return this.currentState.processSubmission(feedback);
   }
+  
+  /**
+   * Get the description of the current state's task
+   * @returns {string} The description of the current state
+   */
+  getStateDescription() {
+    return this.currentState.getDescription();
+  }
 }
 
 module.exports = Session;

@@ -23,6 +23,14 @@ class GreenState extends State {
   }
   
   /**
+   * Get the description of the task for this state
+   * @returns {string} The task description
+   */
+  getDescription() {
+    return "Your task: make all the tests pass";
+  }
+  
+  /**
    * Process LLM feedback for the GREEN state
    * @param {Object} feedback - The feedback from the LLM
    * @returns {boolean} Whether to advance to the next state

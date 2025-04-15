@@ -18,6 +18,7 @@ exports.newSession = (req, res) => {
   res.render('session', {
     sessionId,
     state: session.state,
+    stateDescription: session.getStateDescription(),
     testCases: session.testCases,
     productionCode: session.productionCode,
     testCode: session.testCode,
@@ -75,6 +76,7 @@ exports.submitCode = async (req, res) => {
     res.render('session', {
       sessionId,
       state: session.state,
+      stateDescription: session.getStateDescription(),
       testCases: session.testCases,
       productionCode: session.productionCode,
       testCode: session.testCode,
@@ -126,6 +128,7 @@ exports.restartSession = (req, res) => {
   res.render('session', {
     sessionId,
     state: session.state,
+    stateDescription: session.getStateDescription(),
     testCases: session.testCases,
     productionCode: session.productionCode,
     testCode: session.testCode,

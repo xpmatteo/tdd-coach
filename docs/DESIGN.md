@@ -54,6 +54,7 @@ The application uses the State design pattern to manage the TDD cycle states:
   - `onExit()`: Actions to perform when exiting the state
   - `getNextState()`: Returns the next state in the TDD cycle
   - `canSelectTestCase()`: Whether this state allows test case selection
+  - `getDescription()`: Returns task-specific guidance for the current state
   - `processSubmission()`: Processes LLM feedback for state-specific actions
 
 - **Concrete State Classes**:

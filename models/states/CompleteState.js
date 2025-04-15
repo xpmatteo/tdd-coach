@@ -30,6 +30,14 @@ class CompleteState extends State {
   }
   
   /**
+   * Get the description of the task for this state
+   * @returns {string} The task description
+   */
+  getDescription() {
+    return "Great job! You've completed all the test cases";
+  }
+  
+  /**
    * Process LLM feedback for the COMPLETE state
    * @param {Object} feedback - The feedback from the LLM
    * @returns {boolean} Always false as we can't advance beyond this state

@@ -49,6 +49,14 @@ class State {
   }
   
   /**
+   * Get the description of the task for this state
+   * @returns {string} The task description
+   */
+  getDescription() {
+    throw new Error('getDescription() must be implemented by subclasses');
+  }
+  
+  /**
    * Process LLM feedback for this state
    * @param {Object} feedback - The feedback from the LLM
    * @returns {boolean} Whether to advance to the next state
