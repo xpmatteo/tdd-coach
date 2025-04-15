@@ -79,7 +79,7 @@
                 <h2 class="h5 mb-0">{{stateDescription}}</h2>
                 <div class="d-flex align-items-center">
                     <span class="badge bg-info me-3">LLM Cost: {{tokenUsage.formattedCost}}</span>
-                    <form hx-post="/session/restart" hx-target="body">
+                    <form hx-post="/session/restart" hx-target="body" hx-preserve="scroll">
                         <input type="hidden" name="sessionId" value="{{sessionId}}">
                         <button type="submit" class="btn btn-sm btn-outline-danger">Start Over</button>
                     </form>
@@ -92,7 +92,7 @@
     </div>
 </div>
 
-<form id="code-form" hx-post="/session/submit" hx-target="body" hx-indicator="#feedback-loading">
+<form id="code-form" hx-post="/session/submit" hx-target="body" hx-indicator="#feedback-loading" hx-preserve="scroll">
     <input type="hidden" name="sessionId" value="{{sessionId}}">
     
     <div class="row">
