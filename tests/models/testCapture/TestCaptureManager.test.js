@@ -54,7 +54,7 @@ describe('TestCaptureManager', () => {
   
   beforeEach(() => {
     // Save original environment
-    originalEnv = process.env.TEST_CAPTURE_MODE;
+    originalEnv = process.env.PROMPT_CAPTURE_MODE;
     
     // Reset mocks
     jest.clearAllMocks();
@@ -68,13 +68,13 @@ describe('TestCaptureManager', () => {
   
   afterEach(() => {
     // Restore environment
-    process.env.TEST_CAPTURE_MODE = originalEnv;
+    process.env.PROMPT_CAPTURE_MODE = originalEnv;
   });
   
   describe('initialize', () => {
     it('should create the storage directory when enabled', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       TestCaptureManager.isEnabled = true;
       
       // Act
@@ -87,7 +87,7 @@ describe('TestCaptureManager', () => {
     
     it('should not create directory when disabled', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'false';
+      process.env.PROMPT_CAPTURE_MODE = 'false';
       TestCaptureManager.isEnabled = false;
       
       // Act
@@ -102,7 +102,7 @@ describe('TestCaptureManager', () => {
   describe('saveTestCase', () => {
     it('should save a test case from session data', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       TestCaptureManager.isEnabled = true;
       const name = 'test-case-name';
       
@@ -120,7 +120,7 @@ describe('TestCaptureManager', () => {
     
     it('should throw error when disabled', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'false';
+      process.env.PROMPT_CAPTURE_MODE = 'false';
       TestCaptureManager.isEnabled = false;
       
       // Act & Assert
@@ -130,7 +130,7 @@ describe('TestCaptureManager', () => {
     
     it('should throw error when session has no captured interaction', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       TestCaptureManager.isEnabled = true;
       const sessionWithNoCapture = { 
         ...testSession, 
@@ -146,7 +146,7 @@ describe('TestCaptureManager', () => {
   describe('getTestCases', () => {
     it('should return list of test cases when enabled', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       TestCaptureManager.isEnabled = true;
       
       // Act
@@ -160,7 +160,7 @@ describe('TestCaptureManager', () => {
     
     it('should return empty array when disabled', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'false';
+      process.env.PROMPT_CAPTURE_MODE = 'false';
       TestCaptureManager.isEnabled = false;
       
       // Act
@@ -175,7 +175,7 @@ describe('TestCaptureManager', () => {
   describe('getTestCase', () => {
     it('should return a specific test case', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       TestCaptureManager.isEnabled = true;
       const filename = 'RED_test1.json';
       
@@ -189,7 +189,7 @@ describe('TestCaptureManager', () => {
     
     it('should throw error when disabled', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'false';
+      process.env.PROMPT_CAPTURE_MODE = 'false';
       TestCaptureManager.isEnabled = false;
       
       // Act & Assert
@@ -201,7 +201,7 @@ describe('TestCaptureManager', () => {
   describe('deleteTestCase', () => {
     it('should delete a test case', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       TestCaptureManager.isEnabled = true;
       const filename = 'RED_test1.json';
       
@@ -215,7 +215,7 @@ describe('TestCaptureManager', () => {
     
     it('should throw error when disabled', async () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'false';
+      process.env.PROMPT_CAPTURE_MODE = 'false';
       TestCaptureManager.isEnabled = false;
       
       // Act & Assert
@@ -227,7 +227,7 @@ describe('TestCaptureManager', () => {
   describe('isTestingModeEnabled', () => {
     it('should return true when enabled', () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       TestCaptureManager.isEnabled = true;
       
       // Act
@@ -239,7 +239,7 @@ describe('TestCaptureManager', () => {
     
     it('should return false when disabled', () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'false';
+      process.env.PROMPT_CAPTURE_MODE = 'false';
       TestCaptureManager.isEnabled = false;
       
       // Act

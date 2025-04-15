@@ -33,7 +33,7 @@ class Session {
    * @param {Object} interactionData - Data to capture
    */
   captureInteraction(interactionData) {
-    if (process.env.TEST_CAPTURE_MODE !== 'true') return;
+    if (process.env.PROMPT_CAPTURE_MODE !== 'true') return;
     
     this.capturedInteraction = {
       ...interactionData,

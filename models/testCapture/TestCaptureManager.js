@@ -11,7 +11,7 @@ class TestCaptureManager {
    */
   constructor(storageDir = 'prompt-tests') {
     this.storageDir = storageDir;
-    this.isEnabled = process.env.TEST_CAPTURE_MODE === 'true';
+    this.isEnabled = process.env.PROMPT_CAPTURE_MODE === 'true';
   }
 
   /**

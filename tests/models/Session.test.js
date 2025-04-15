@@ -5,18 +5,18 @@ describe('Session', () => {
   
   beforeEach(() => {
     // Save the original environment 
-    originalEnv = process.env.TEST_CAPTURE_MODE;
+    originalEnv = process.env.PROMPT_CAPTURE_MODE;
   });
   
   afterEach(() => {
     // Restore the original environment
-    process.env.TEST_CAPTURE_MODE = originalEnv;
+    process.env.PROMPT_CAPTURE_MODE = originalEnv;
   });
   
   describe('captureInteraction', () => {
-    it('should store captured interaction when TEST_CAPTURE_MODE is true', () => {
+    it('should store captured interaction when PROMPT_CAPTURE_MODE is true', () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       const session = new Session('fizzbuzz');
       const interactionData = {
         state: 'RED',
@@ -35,9 +35,9 @@ describe('Session', () => {
       expect(session.capturedInteraction.id).toBeDefined();
     });
     
-    it('should not store captured interaction when TEST_CAPTURE_MODE is not true', () => {
+    it('should not store captured interaction when PROMPT_CAPTURE_MODE is not true', () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'false';
+      process.env.PROMPT_CAPTURE_MODE = 'false';
       const session = new Session('fizzbuzz');
       const interactionData = {
         state: 'RED',
@@ -55,7 +55,7 @@ describe('Session', () => {
   describe('getCurrentCapture', () => {
     it('should return the captured interaction', () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       const session = new Session('fizzbuzz');
       const interactionData = {
         state: 'RED',
@@ -85,7 +85,7 @@ describe('Session', () => {
   describe('clearCapturedInteraction', () => {
     it('should clear the captured interaction', () => {
       // Arrange
-      process.env.TEST_CAPTURE_MODE = 'true';
+      process.env.PROMPT_CAPTURE_MODE = 'true';
       const session = new Session('fizzbuzz');
       const interactionData = {
         state: 'RED',

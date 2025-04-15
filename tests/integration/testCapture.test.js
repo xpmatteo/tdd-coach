@@ -16,10 +16,10 @@ describe('Test Capture Integration', () => {
   
   beforeEach(() => {
     // Save the original environment
-    originalEnv = process.env.TEST_CAPTURE_MODE;
+    originalEnv = process.env.PROMPT_CAPTURE_MODE;
     
     // Set test capture mode to true
-    process.env.TEST_CAPTURE_MODE = 'true';
+    process.env.PROMPT_CAPTURE_MODE = 'true';
     
     // Explicitly set isEnabled to true since the module may have been loaded before
     // environment variable was changed
@@ -31,7 +31,7 @@ describe('Test Capture Integration', () => {
   
   afterEach(() => {
     // Restore the original environment
-    process.env.TEST_CAPTURE_MODE = originalEnv;
+    process.env.PROMPT_CAPTURE_MODE = originalEnv;
   });
   
   it('should capture and save a test case', async () => {
@@ -71,7 +71,7 @@ describe('Test Capture Integration', () => {
   
   it('should not interfere with multiple sessions', () => {
     // Arrange
-    process.env.TEST_CAPTURE_MODE = 'true';
+    process.env.PROMPT_CAPTURE_MODE = 'true';
     const session1 = new Session('fizzbuzz');
     const session2 = new Session('fizzbuzz');
     

@@ -58,9 +58,9 @@ The Prompt Testing System is a comprehensive framework for capturing, managing, 
 
 ### Enabling Test Capture Mode
 
-1. Set `TEST_CAPTURE_MODE=true` in your `.env` file:
+1. Set `PROMPT_CAPTURE_MODE=true` in your `.env` file:
    ```
-   TEST_CAPTURE_MODE=true
+   PROMPT_CAPTURE_MODE=true
    ```
 2. Restart the application
 3. When test capture mode is enabled, you'll see:

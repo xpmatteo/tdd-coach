@@ -82,7 +82,7 @@ The TDD Coach includes a comprehensive system for testing and improving the AI p
 
 ### Enabling Prompt Testing Mode
 
-1. Set `TEST_CAPTURE_MODE=true` in your `.env` file
+1. Set `PROMPT_CAPTURE_MODE=true` in your `.env` file
 2. Restart the application
 3. Use the TDD Coach normally
 4. After receiving feedback, click "Save as Prompt Test"
