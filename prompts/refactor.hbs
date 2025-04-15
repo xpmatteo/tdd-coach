@@ -27,11 +27,21 @@ Evaluate their refactoring following these criteria:
 4. Improve names of variables, functions, and classes
 5. Remove unnecessary elements
 
-Your comments should address the learner in second person.
-If the refactoring fails to meet one or more of the criteria, explain it in a few words.
-If the refactoring is good, explain in a few words why it's good.
+Evaluate both production and test code, following these criteria:
+- All tests should still pass
+- No duplicated code
+- All names of variables, functions, and classes should clearly explain intent
+- The names of the tests should reflect the intent
+- Code is minimal
+
+Think hard if you can remove some parts of the production code and still make all the tests pass. If you can, the code is not minimal.
+
+
+If all the criteria are met: good! they can proceed.
+Otherwise, they can not proceed.
+
 Keep the comments under 30 words total.
-Focus only on the most important point about the refactoring.
+Focus only on the most important point.
 
 Respond in the following JSON format:
 {
@@ -39,5 +49,3 @@ Respond in the following JSON format:
   "hint": "A specific hint to help them improve their refactoring if they're stuck",
   "proceed": "yes/no - can they proceed to the next test case?"
 }
-
-If they haven't made any refactoring changes but the code is already clean, you can still say "proceed: yes" and compliment them on writing clean code from the start.
