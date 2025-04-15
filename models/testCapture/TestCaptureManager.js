@@ -22,7 +22,8 @@ class TestCaptureManager {
 
     try {
       // Check if storage directory exists, create if not
-      await fs.mkdir(path.join(process.cwd(), this.storageDir), { recursive: true });
+      const storagePath = path.join(process.cwd(), this.storageDir);
+      await fs.mkdir(storagePath, { recursive: true });
       console.log(`Test capture mode enabled. Storing test cases in: ${this.storageDir}`);
     } catch (error) {
       console.error('Error initializing test capture system:', error);
@@ -62,8 +63,10 @@ class TestCaptureManager {
 
       console.log(`Test case saved: ${filename}`);
 
-      // Optionally clear the captured interaction from the session
-      session.clearCapturedInteraction();
+      // Clear the captured interaction from the session
+      if (typeof session.clearCapturedInteraction === 'function') {
+        session.clearCapturedInteraction();
+      }
 
       return filename;
     } catch (error) {
@@ -80,7 +83,14 @@ class TestCaptureManager {
     if (!this.isEnabled) return [];
 
     try {
-      const files = await fs.readdir(path.join(process.cwd(), this.storageDir));
+      const storagePath = path.join(process.cwd(), this.storageDir);
+      const files = await fs.readdir(storagePath);
+      
+      if (!files || !Array.isArray(files)) {
+        console.error('Error reading directory: files is not an array', files);
+        return [];
+      }
+      
       const jsonFiles = files.filter(file => file.endsWith('.json'));
 
       const testCases = await Promise.all(
@@ -93,9 +103,9 @@ class TestCaptureManager {
               filename: file,
               state: data.state,
               timestamp: data.timestamp,
-              testCaseName: data.currentTestIndex !== null && data.testCases[data.currentTestIndex] ?
+              testCaseName: data.currentTestIndex !== null && data.testCases && data.testCases[data.currentTestIndex] ?
                 data.testCases[data.currentTestIndex].description : 'No test selected',
-              proceed: data.llmResponse.proceed
+              proceed: data.llmResponse?.proceed || 'no'
             };
           } catch (error) {
             console.error(`Error parsing test case ${file}:`, error);

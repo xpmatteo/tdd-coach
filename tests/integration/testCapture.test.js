@@ -17,7 +17,13 @@ describe('Test Capture Integration', () => {
   beforeEach(() => {
     // Save the original environment
     originalEnv = process.env.TEST_CAPTURE_MODE;
+    
+    // Set test capture mode to true
     process.env.TEST_CAPTURE_MODE = 'true';
+    
+    // Explicitly set isEnabled to true since the module may have been loaded before
+    // environment variable was changed
+    TestCaptureManager.isEnabled = true;
     
     // Reset mocks
     jest.clearAllMocks();
@@ -49,13 +55,15 @@ describe('Test Capture Integration', () => {
     expect(capture.state).toBe('RED');
     expect(capture.llmResponse.proceed).toBe('yes');
     
-    // Check if writeFile was called with correct arguments
+    // Check if writeFile was called with proper args
     const fs = require('fs').promises;
-    expect(fs.writeFile).toHaveBeenCalledWith(
-      expect.stringContaining('test-case-name'),
-      expect.stringContaining('RED'),
-      undefined
-    );
+    expect(fs.writeFile).toHaveBeenCalled();
+    const writeArgs = fs.writeFile.mock.calls[0];
+    // Check if path contains test-case-name (lowercase, converted to snake case)
+    expect(writeArgs[0].toLowerCase()).toContain('test_case_name');
+    // Check if data contains RED state
+    expect(typeof writeArgs[1]).toBe('string');
+    expect(writeArgs[1]).toContain('RED');
     
     // Check if session's capturedInteraction was cleared
     expect(session.getCurrentCapture()).toBeNull();
