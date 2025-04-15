@@ -224,14 +224,14 @@ describe('TestCaptureManager', () => {
     });
   });
   
-  describe('isTestingModeEnabled', () => {
+  describe('isPromptCaptureModeEnabled', () => {
     it('should return true when enabled', () => {
       // Arrange
       process.env.PROMPT_CAPTURE_MODE = 'true';
       TestCaptureManager.isEnabled = true;
       
       // Act
-      const result = TestCaptureManager.isTestingModeEnabled();
+      const result = TestCaptureManager.isPromptCaptureModeEnabled();
       
       // Assert
       expect(result).toBe(true);
@@ -243,7 +243,7 @@ describe('TestCaptureManager', () => {
       TestCaptureManager.isEnabled = false;
       
       // Act
-      const result = TestCaptureManager.isTestingModeEnabled();
+      const result = TestCaptureManager.isPromptCaptureModeEnabled();
       
       // Assert
       expect(result).toBe(false);

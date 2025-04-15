@@ -40,7 +40,7 @@ exports.getSession = (req, res) => {
     selectedTestIndex: null,
     proceed: null, // No proceed value for initial welcome message
     tokenUsage: session.tokenUsage.getStats(),
-    isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
+    isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
   });
 };
 
@@ -69,7 +69,7 @@ exports.submitCode = async (req, res) => {
     const feedback = await getLlmFeedback(prompt, session.tokenUsage);
     
     // Capture interaction if test capture mode is enabled
-    if (testCaptureManager.isTestingModeEnabled()) {
+    if (testCaptureManager.isPromptCaptureModeEnabled()) {
       session.captureInteraction({
         state: session.state,
         productionCode: session.productionCode,
@@ -98,7 +98,7 @@ exports.submitCode = async (req, res) => {
       selectedTestIndex: session.selectedTestIndex,
       proceed: feedback.proceed, // Pass proceed value to the view
       tokenUsage: session.tokenUsage.getStats(),
-      isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
+      isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
     });
   } catch (error) {
     console.error('Error getting LLM feedback:', error);
@@ -152,6 +152,6 @@ exports.restartSession = (req, res) => {
     selectedTestIndex: null,
     proceed: null, // No proceed value for restart message
     tokenUsage: newSession.tokenUsage.getStats(),
-    isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
+    isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
   });
 };

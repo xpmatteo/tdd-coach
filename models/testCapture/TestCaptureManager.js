@@ -28,6 +28,7 @@ class TestCaptureManager {
     } catch (error) {
       console.error('Error initializing test capture system:', error);
       this.isEnabled = false;
+      throw error;
     }
   }
 
@@ -151,7 +152,7 @@ class TestCaptureManager {
    * Check if testing mode is enabled
    * @returns {boolean} - Whether testing mode is enabled
    */
-  isTestingModeEnabled() {
+  isPromptCaptureModeEnabled() {
     return this.isEnabled;
   }
 

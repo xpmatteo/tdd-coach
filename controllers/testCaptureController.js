@@ -13,7 +13,7 @@ exports.listTestCases = async (req, res) => {
     res.render('testCases/list', {
       title: 'Prompt Tests - List',
       testCases,
-      isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
+      isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
     });
   } catch (error) {
     console.error('Error listing test cases:', error);
@@ -33,7 +33,7 @@ exports.viewTestCase = async (req, res) => {
       title: 'Prompt Test Details',
       testCase,
       filename,
-      isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
+      isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
     });
   } catch (error) {
     console.error('Error viewing test case:', error);
@@ -63,7 +63,7 @@ exports.showSaveForm = (req, res) => {
       title: 'Save as Prompt Test',
       capture: currentCapture,
       sessionId,
-      isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
+      isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
     });
   } catch (error) {
     console.error('Error showing save form:', error);
