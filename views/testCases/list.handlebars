@@ -1,36 +1,14 @@
 <div class="test-capture-container">
-  <h1>Test Cases</h1>
+  <h1>Prompt Tests</h1>
 
   {{#if isTestingModeEnabled}}
     <div class="test-mode-indicator enabled">
       <span>🔴 Test Capture Mode Enabled</span>
     </div>
-
-    {{#if currentCapture}}
-      <div class="capture-available">
-        <div class="card">
-          <h2>Current Captured Interaction</h2>
-          <div class="capture-info">
-            <p><strong>State:</strong> {{currentCapture.state}}</p>
-            <p><strong>Timestamp:</strong> {{formatDate currentCapture.timestamp}}</p>
-            <p><strong>LLM Response:</strong> {{#if currentCapture.llmResponse.proceed}}
-              <span class="{{#if (eq currentCapture.llmResponse.proceed 'yes')}}proceed-yes{{else}}proceed-no{{/if}}">
-                {{currentCapture.llmResponse.proceed}}
-              </span>
-            {{else}}
-              N/A
-            {{/if}}</p>
-          </div>
-          <div class="capture-actions">
-            <a href="/prompt-tests/save" class="btn primary">Save as Test Case</a>
-          </div>
-        </div>
-      </div>
-    {{else}}
-      <div class="no-capture">
-        <p>No interaction captured yet. Complete a coaching step to capture an interaction.</p>
-      </div>
-    {{/if}}
+    <div class="test-mode-description">
+      <p>Use the TDD Coach and after receiving feedback, click "Save as Prompt Test" to capture the interaction.</p>
+      <p>Each test captures the code, state, test cases, and LLM response for later analysis.</p>
+    </div>
   {{else}}
     <div class="test-mode-indicator disabled">
       <span>⚪ Test Capture Mode Disabled</span>

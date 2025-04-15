@@ -6,6 +6,9 @@ const testCaptureManager = require('../models/testCapture/TestCaptureManager');
 // Store active sessions in memory (replace with proper storage in production)
 const sessions = new Map();
 
+// Export sessions map for test capture controller
+exports.sessions = sessions;
+
 exports.newSession = (req, res) => {
   // Create a new session for FizzBuzz kata
   const sessionId = Date.now().toString();
@@ -52,7 +55,7 @@ exports.submitCode = async (req, res) => {
     
     // Capture interaction if test capture mode is enabled
     if (testCaptureManager.isTestingModeEnabled()) {
-      testCaptureManager.captureInteraction({
+      session.captureInteraction({
         state: session.state,
         productionCode: session.productionCode,
         testCode: session.testCode,

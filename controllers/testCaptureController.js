@@ -1,5 +1,8 @@
 const testCaptureManager = require('../models/testCapture/TestCaptureManager');
 
+// Access sessions map from the sessionController
+const sessions = require('../controllers/sessionController').sessions || new Map();
+
 /**
  * Display the list of captured test cases
  */
@@ -10,8 +13,7 @@ exports.listTestCases = async (req, res) => {
     res.render('testCases/list', {
       title: 'Prompt Tests - List',
       testCases,
-      isTestingModeEnabled: testCaptureManager.isTestingModeEnabled(),
-      currentCapture: testCaptureManager.getCurrentCapture()
+      isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
     });
   } catch (error) {
     console.error('Error listing test cases:', error);
@@ -43,17 +45,30 @@ exports.viewTestCase = async (req, res) => {
  * Show the form to save a captured interaction as a test case
  */
 exports.showSaveForm = (req, res) => {
-  const currentCapture = testCaptureManager.getCurrentCapture();
-  
-  if (!currentCapture) {
-    return res.redirect('/prompt-tests');
+  try {
+    const { sessionId } = req.query;
+    const session = sessions.get(sessionId);
+    
+    if (!session) {
+      return res.status(404).send('Session not found');
+    }
+    
+    const currentCapture = session.getCurrentCapture();
+    
+    if (!currentCapture) {
+      return res.redirect('/prompt-tests');
+    }
+    
+    res.render('testCases/save', {
+      title: 'Save as Prompt Test',
+      capture: currentCapture,
+      sessionId,
+      isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
+    });
+  } catch (error) {
+    console.error('Error showing save form:', error);
+    res.status(500).send('Error preparing save form');
   }
-  
-  res.render('testCases/save', {
-    title: 'Save as Prompt Test',
-    capture: currentCapture,
-    isTestingModeEnabled: testCaptureManager.isTestingModeEnabled()
-  });
 };
 
 /**
@@ -61,13 +76,19 @@ exports.showSaveForm = (req, res) => {
  */
 exports.saveTestCase = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, sessionId } = req.body;
     
     if (!name) {
       return res.status(400).send('Test case name is required');
     }
     
-    const filename = await testCaptureManager.saveTestCase(name);
+    const session = sessions.get(sessionId);
+    
+    if (!session) {
+      return res.status(404).send('Session not found');
+    }
+    
+    const filename = await testCaptureManager.saveTestCase(session, name);
     
     res.redirect(`/prompt-tests/${filename}`);
   } catch (error) {

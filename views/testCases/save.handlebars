@@ -19,6 +19,7 @@
   </div>
 
   <form method="POST" action="/prompt-tests/save" class="save-form">
+    <input type="hidden" name="sessionId" value="{{sessionId}}">
     <div class="form-group">
       <label for="test-case-name">Test Case Name:</label>
       <input

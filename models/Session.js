@@ -19,12 +19,42 @@ class Session {
     this.testCode = kata.initialTestCode || '';
     this.currentTestIndex = null;
     this.selectedTestIndex = null;
+    this.capturedInteraction = null;
 
     // Initialize with PICK state
     this.setCurrentState(new PickState(this));
     
     // Initialize token usage tracking
     this.tokenUsage = new TokenUsage();
+  }
+
+  /**
+   * Capture an interaction for potential test case creation
+   * @param {Object} interactionData - Data to capture
+   */
+  captureInteraction(interactionData) {
+    if (process.env.TEST_CAPTURE_MODE !== 'true') return;
+    
+    this.capturedInteraction = {
+      ...interactionData,
+      timestamp: new Date().toISOString(),
+      id: Date.now().toString()
+    };
+  }
+  
+  /**
+   * Get the currently captured interaction
+   * @returns {Object|null} - The captured interaction or null
+   */
+  getCurrentCapture() {
+    return this.capturedInteraction;
+  }
+  
+  /**
+   * Clear the captured interaction
+   */
+  clearCapturedInteraction() {
+    this.capturedInteraction = null;
   }
 
   /**

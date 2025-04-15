@@ -9,10 +9,9 @@ class TestCaptureManager {
    * Creates a new TestCaptureManager
    * @param {string} storageDir - Directory to store test cases
    */
-  constructor(storageDir = 'promptTestCases') {
+  constructor(storageDir = 'prompt-tests') {
     this.storageDir = storageDir;
     this.isEnabled = process.env.TEST_CAPTURE_MODE === 'true';
-    this.capturedInteraction = null;
   }
 
   /**
@@ -21,44 +20,34 @@ class TestCaptureManager {
   async initialize() {
     if (!this.isEnabled) return;
 
-    // Check if storage directory exists, create if not
-    await fs.mkdir(path.join(process.cwd(), this.storageDir), { recursive: true });
-    console.log(`Test capture mode enabled. Storing test cases in: ${this.storageDir}`);
+    try {
+      // Check if storage directory exists, create if not
+      await fs.mkdir(path.join(process.cwd(), this.storageDir), { recursive: true });
+      console.log(`Test capture mode enabled. Storing test cases in: ${this.storageDir}`);
+    } catch (error) {
+      console.error('Error initializing test capture system:', error);
+      this.isEnabled = false;
+    }
   }
 
   /**
-   * Capture an interaction for potential test case creation
-   * @param {Object} captureData - Data to capture
-   * @param {string} captureData.state - Current TDD state
-   * @param {string} captureData.productionCode - Current production code
-   * @param {string} captureData.testCode - Current test code
-   * @param {Array} captureData.testCases - All test cases
-   * @param {number|null} captureData.selectedTestIndex - Selected test index (if applicable)
-   * @param {number|null} captureData.currentTestIndex - Current test index (if applicable)
-   * @param {Object} captureData.llmResponse - Response from the LLM
-   */
-  captureInteraction(captureData) {
-    if (!this.isEnabled) return;
-
-    this.capturedInteraction = {
-      ...captureData,
-      timestamp: new Date().toISOString(),
-      id: Date.now().toString()
-    };
-  }
-
-  /**
-   * Save the currently captured interaction as a test case
+   * Save the captured interaction from a session as a test case
+   * @param {Object} session - Session containing the captured interaction
    * @param {string} name - Name for the test case
    * @returns {Promise<string>} - Filename of the saved test case
    */
-  async saveTestCase(name) {
-    if (!this.isEnabled || !this.capturedInteraction) {
-      throw new Error('No interaction captured or test capture mode disabled');
+  async saveTestCase(session, name) {
+    if (!this.isEnabled) {
+      throw new Error('Test capture mode disabled');
+    }
+
+    const capturedInteraction = session.getCurrentCapture();
+    if (!capturedInteraction) {
+      throw new Error('No interaction captured');
     }
 
     // Create a sanitized filename based on the name and state
-    const state = this.capturedInteraction.state;
+    const state = capturedInteraction.state;
     const timestamp = new Date().toISOString().replace(/:/g, '-');
     const sanitizedName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const filename = `${state}_${sanitizedName}_${timestamp}.json`;
@@ -68,10 +57,14 @@ class TestCaptureManager {
     try {
       await fs.writeFile(
         filePath,
-        JSON.stringify(this.capturedInteraction, null, 2)
+        JSON.stringify(capturedInteraction, null, 2)
       );
 
       console.log(`Test case saved: ${filename}`);
+
+      // Optionally clear the captured interaction from the session
+      session.clearCapturedInteraction();
+
       return filename;
     } catch (error) {
       console.error('Error saving test case:', error);
@@ -150,14 +143,6 @@ class TestCaptureManager {
    */
   isTestingModeEnabled() {
     return this.isEnabled;
-  }
-
-  /**
-   * Get the currently captured interaction
-   * @returns {Object|null} - The captured interaction or null
-   */
-  getCurrentCapture() {
-    return this.capturedInteraction;
   }
 
   /**
