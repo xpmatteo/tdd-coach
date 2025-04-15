@@ -52,13 +52,13 @@ app.post('/prompt-tests/:filename/delete', testCaptureController.deleteTestCase)
 const testCaptureManager = require('./models/testCapture/TestCaptureManager');
 testCaptureManager.initialize().catch(err => {
   console.error('Failed to initialize test capture system:', err);
+  process.exit(1);
 });
 
 // Start server
 app.listen(PORT, () => {
   console.log(`TDD Coach app listening at http://localhost:${PORT}`);
   console.log('Using Anthropic API key:', process.env.ANTHROPIC_API_KEY.substring(0, 5) + '...');
-  
   if (process.env.TEST_CAPTURE_MODE === 'true') {
     console.log('🔴 Test Capture Mode ENABLED');
   }

@@ -1,11 +1,11 @@
 <div class="test-capture-container">
   <h1>Test Cases</h1>
-  
+
   {{#if isTestingModeEnabled}}
     <div class="test-mode-indicator enabled">
       <span>🔴 Test Capture Mode Enabled</span>
     </div>
-    
+
     {{#if currentCapture}}
       <div class="capture-available">
         <div class="card">
@@ -22,7 +22,7 @@
             {{/if}}</p>
           </div>
           <div class="capture-actions">
-            <a href="/test-cases/save" class="btn primary">Save as Test Case</a>
+            <a href="/prompt-tests/save" class="btn primary">Save as Test Case</a>
           </div>
         </div>
       </div>
@@ -37,9 +37,9 @@
       <p>Set TEST_CAPTURE_MODE=true in your .env file to enable test capture mode.</p>
     </div>
   {{/if}}
-  
+
   <h2>Saved Test Cases</h2>
-  
+
   {{#if testCases.length}}
     <div class="test-cases-list">
       <table>
@@ -64,8 +64,8 @@
               </td>
               <td>{{formatDate this.timestamp}}</td>
               <td class="actions-cell">
-                <a href="/test-cases/{{this.filename}}" class="btn small">View</a>
-                <form method="POST" action="/test-cases/{{this.filename}}/delete" class="inline-form"
+                <a href="/prompt-tests/{{this.filename}}" class="btn small">View</a>
+                <form method="POST" action="/prompt-tests/{{this.filename}}/delete" class="inline-form"
                       onsubmit="return confirm('Are you sure you want to delete this test case?');">
                   <button type="submit" class="btn small danger">Delete</button>
                 </form>
@@ -80,7 +80,7 @@
       <p>No test cases have been saved yet.</p>
     </div>
   {{/if}}
-  
+
   <div class="navigation">
     <a href="/" class="btn">Back to TDD Coach</a>
   </div>

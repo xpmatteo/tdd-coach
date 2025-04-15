@@ -1,12 +1,12 @@
 <div class="test-case-view">
   <h1>Test Case Details</h1>
-  
+
   <div class="test-case-header">
     <div class="metadata">
       <p><strong>Filename:</strong> {{filename}}</p>
       <p><strong>State:</strong> <span class="state-badge">{{testCase.state}}</span></p>
       <p><strong>Timestamp:</strong> {{formatDate testCase.timestamp}}</p>
-      <p><strong>Result:</strong> 
+      <p><strong>Result:</strong>
         <span class="{{#if (eq testCase.llmResponse.proceed 'yes')}}proceed-yes{{else}}proceed-no{{/if}}">
           {{testCase.llmResponse.proceed}}
         </span>
@@ -38,7 +38,7 @@
         <h2>Production Code</h2>
         <pre><code class="language-javascript">{{testCase.productionCode}}</code></pre>
       </div>
-      
+
       <div class="test-code">
         <h2>Test Code</h2>
         <pre><code class="language-javascript">{{testCase.testCode}}</code></pre>
@@ -47,14 +47,14 @@
 
     <div class="llm-response">
       <h2>LLM Response</h2>
-      
+
       <div class="comments {{#if (eq testCase.llmResponse.proceed 'yes')}}proceed-yes-bg{{else}}proceed-no-bg{{/if}}">
         <h3>Comments</h3>
         <div class="comment-content">
           {{testCase.llmResponse.comments}}
         </div>
       </div>
-      
+
       <div class="hint">
         <h3>Hint</h3>
         <div class="hint-content">
@@ -65,8 +65,8 @@
   </div>
 
   <div class="navigation">
-    <a href="/test-cases" class="btn">Back to Test Cases</a>
-    <form method="POST" action="/test-cases/{{filename}}/delete" class="inline-form"
+    <a href="/prompt-tests" class="btn">Back to Test Cases</a>
+    <form method="POST" action="/prompt-tests/{{filename}}/delete" class="inline-form"
           onsubmit="return confirm('Are you sure you want to delete this test case?');">
       <button type="submit" class="btn danger">Delete</button>
     </form>

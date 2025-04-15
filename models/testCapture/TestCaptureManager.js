@@ -21,14 +21,9 @@ class TestCaptureManager {
   async initialize() {
     if (!this.isEnabled) return;
 
-    try {
-      // Check if storage directory exists, create if not
-      await fs.mkdir(path.join(process.cwd(), this.storageDir), { recursive: true });
-      console.log(`Test capture mode enabled. Storing test cases in: ${this.storageDir}`);
-    } catch (error) {
-      console.error('Error initializing test capture system:', error);
-      this.isEnabled = false;
-    }
+    // Check if storage directory exists, create if not
+    await fs.mkdir(path.join(process.cwd(), this.storageDir), { recursive: true });
+    console.log(`Test capture mode enabled. Storing test cases in: ${this.storageDir}`);
   }
 
   /**
@@ -67,15 +62,15 @@ class TestCaptureManager {
     const timestamp = new Date().toISOString().replace(/:/g, '-');
     const sanitizedName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const filename = `${state}_${sanitizedName}_${timestamp}.json`;
-    
+
     const filePath = path.join(process.cwd(), this.storageDir, filename);
-    
+
     try {
       await fs.writeFile(
-        filePath, 
+        filePath,
         JSON.stringify(this.capturedInteraction, null, 2)
       );
-      
+
       console.log(`Test case saved: ${filename}`);
       return filename;
     } catch (error) {
@@ -90,11 +85,11 @@ class TestCaptureManager {
    */
   async getTestCases() {
     if (!this.isEnabled) return [];
-    
+
     try {
       const files = await fs.readdir(path.join(process.cwd(), this.storageDir));
       const jsonFiles = files.filter(file => file.endsWith('.json'));
-      
+
       const testCases = await Promise.all(
         jsonFiles.map(async (file) => {
           const filePath = path.join(process.cwd(), this.storageDir, file);
@@ -105,7 +100,7 @@ class TestCaptureManager {
               filename: file,
               state: data.state,
               timestamp: data.timestamp,
-              testCaseName: data.currentTestIndex !== null && data.testCases[data.currentTestIndex] ? 
+              testCaseName: data.currentTestIndex !== null && data.testCases[data.currentTestIndex] ?
                 data.testCases[data.currentTestIndex].description : 'No test selected',
               proceed: data.llmResponse.proceed
             };
@@ -121,7 +116,7 @@ class TestCaptureManager {
           }
         })
       );
-      
+
       return testCases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     } catch (error) {
       console.error('Error getting test cases:', error);
@@ -138,7 +133,7 @@ class TestCaptureManager {
     if (!this.isEnabled) {
       throw new Error('Test capture mode disabled');
     }
-    
+
     try {
       const filePath = path.join(process.cwd(), this.storageDir, filename);
       const content = await fs.readFile(filePath, 'utf8');
@@ -174,7 +169,7 @@ class TestCaptureManager {
     if (!this.isEnabled) {
       throw new Error('Test capture mode disabled');
     }
-    
+
     try {
       const filePath = path.join(process.cwd(), this.storageDir, filename);
       await fs.unlink(filePath);
