@@ -4,30 +4,30 @@
         height: 300px !important;
         border: 1px solid #ddd;
     }
-    
+
     /* Fixed height for test list */
     .test-list-container {
         max-height: 300px;
         overflow-y: auto;
     }
-    
+
     /* Fixed height for feedback section */
     .feedback-container {
         max-height: 150px;
         overflow-y: auto;
     }
-    
+
     /* Feedback status colors */
     .feedback-proceed-yes {
         background-color: #d4edda; /* Light green */
         color: #155724; /* Dark green text for contrast */
     }
-    
+
     .feedback-proceed-no {
         background-color: #f8d7da; /* Light pink */
         color: #721c24; /* Dark red text for contrast */
     }
-    
+
     /* Loading indicator styles */
     .htmx-indicator {
         display: none;
@@ -38,7 +38,7 @@
     .htmx-request.htmx-indicator {
         display: inline-block;
     }
-    
+
     /* Spinner animation */
     .spinner {
         display: inline-block;
@@ -50,7 +50,7 @@
         border-radius: 50%;
         animation: spinner 0.75s linear infinite;
     }
-    
+
     /* Overlay for the feedback area while loading */
     .feedback-loading-overlay {
         position: absolute;
@@ -66,7 +66,7 @@
         z-index: 10;
         border-radius: 0.25rem;
     }
-    
+
     @keyframes spinner {
         to { transform: rotate(360deg); }
     }
@@ -79,7 +79,7 @@
                 <h2 class="h5 mb-0">{{stateDescription}}</h2>
                 <div class="d-flex align-items-center">
                     <span class="badge bg-info me-3">LLM Cost: {{tokenUsage.formattedCost}}</span>
-                    <form hx-post="/session/restart" hx-target="body" hx-preserve="scroll">
+                    <form hx-post="/session/restart" hx-target="body">
                         <input type="hidden" name="sessionId" value="{{sessionId}}">
                         <button type="submit" class="btn btn-sm btn-outline-danger">Start Over</button>
                     </form>
@@ -92,9 +92,9 @@
     </div>
 </div>
 
-<form id="code-form" hx-post="/session/submit" hx-target="body" hx-indicator="#feedback-loading" hx-preserve="scroll">
+<form id="code-form" hx-post="/session/submit" hx-target="body" hx-indicator="#feedback-loading">
     <input type="hidden" name="sessionId" value="{{sessionId}}">
-    
+
     <div class="row">
         <div class="col-md-3">
             <div class="card h-100">
@@ -124,30 +124,32 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-header">
                     <h3 class="h6 mb-0">Production Code</h3>
                 </div>
-                <div class="card-body">
+                <!-- id and hx-preserve are meant to preserve the scroll positions during reload -->
+                <div class="card-body" id="prod-code-editor" hx-preserve="true">
                     <textarea id="production-code" name="productionCode" class="form-control code-editor" style="height: 300px;">{{productionCode}}</textarea>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-5">
             <div class="card h-100">
                 <div class="card-header">
                     <h3 class="h6 mb-0">Test Code</h3>
                 </div>
-                <div class="card-body">
+                <!-- id and hx-preserve are meant to preserve the scroll positions during reload -->
+                <div class="card-body" id="test-code-editor" hx-preserve="true">
                     <textarea id="test-code" name="testCode" class="form-control code-editor" style="height: 300px;">{{testCode}}</textarea>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="row mt-3">
         <div class="col-12">
             <div class="card mb-3">
@@ -169,7 +171,7 @@
                     <div id="feedback-loading" class="feedback-loading-overlay htmx-indicator" hx-indicator="this">
                         <div class="spinner mb-2"></div>
                     </div>
-                    
+
                     <div id="coach-feedback">
                         {{#if feedback}}
                         <p>{{feedback}}</p>
@@ -182,23 +184,23 @@
             </div>
         </div>
     </div>
-    
+
     <div class="row mt-2">
         <div class="col-12 text-center">
             <button type="submit" class="btn btn-primary">
                 Submit
                 <span class="htmx-indicator ms-1"><span class="spinner" style="width: 1rem; height: 1rem;"></span></span>
             </button>
-            
-            <button type="button" id="help-btn" class="btn btn-secondary ms-2" 
-                    hx-post="/session/hint" 
-                    hx-swap="none" 
+
+            <button type="button" id="help-btn" class="btn btn-secondary ms-2"
+                    hx-post="/session/hint"
+                    hx-swap="none"
                     hx-vals='{"sessionId": "{{sessionId}}"}'
                     hx-indicator="#feedback-loading">
                 Help Me
                 <span class="htmx-indicator ms-1"><span class="spinner" style="width: 1rem; height: 1rem;"></span></span>
             </button>
-            
+
             {{#if isPromptCaptureModeEnabled}}
                 <a href="/prompt-tests/save?sessionId={{sessionId}}" class="btn btn-info ms-2 {{#unless feedback}}disabled{{/unless}}">
                     Save as Prompt Test
@@ -219,12 +221,12 @@
             tabSize: 2,
             height: '300px'
         });
-        
+
         // Set fixed height for the CodeMirror editors
         document.querySelectorAll('.CodeMirror').forEach(function(editor) {
             editor.style.height = '300px';
         });
-        
+
         // Initialize CodeMirror for test code
         window.testEditor = CodeMirror.fromTextArea(document.getElementById('test-code'), {
             mode: 'javascript',
@@ -234,29 +236,29 @@
             tabSize: 2,
             height: '300px'
         });
-        
+
         // Update textareas before form submission
         document.getElementById('code-form').addEventListener('submit', function() {
             window.productionEditor.save();
             window.testEditor.save();
         });
-        
+
         // Handle hint retrieval, visibility and styling
         document.addEventListener('htmx:afterRequest', function(event) {
             // Check if this is a hint request
-            if (event.detail.requestConfig && 
-                event.detail.requestConfig.path && 
+            if (event.detail.requestConfig &&
+                event.detail.requestConfig.path &&
                 event.detail.requestConfig.path.includes('/session/hint')) {
-                
+
                 try {
                     // Parse the response
                     const response = JSON.parse(event.detail.xhr.responseText);
                     const hintElement = document.getElementById('hint');
-                    
+
                     // Set the hint text
                     hintElement.textContent = response.hint;
                     hintElement.classList.remove('d-none');
-                    
+
                     // Apply appropriate border color based on proceed value
                     if (response.proceed === 'yes') {
                         hintElement.style.borderColor = '#155724'; // dark green
