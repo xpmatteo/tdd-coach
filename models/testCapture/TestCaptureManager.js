@@ -24,7 +24,6 @@ class TestCaptureManager {
       // Check if storage directory exists, create if not
       const storagePath = path.join(process.cwd(), this.storageDir);
       await fs.mkdir(storagePath, { recursive: true });
-      console.log(`Test capture mode enabled. Storing test cases in: ${this.storageDir}`);
     } catch (error) {
       console.error('Error initializing test capture system:', error);
       this.isEnabled = false;
@@ -62,8 +61,6 @@ class TestCaptureManager {
         JSON.stringify(capturedInteraction, null, 2)
       );
 
-      console.log(`Test case saved: ${filename}`);
-
       // Clear the captured interaction from the session
       if (typeof session.clearCapturedInteraction === 'function') {
         session.clearCapturedInteraction();
@@ -86,12 +83,12 @@ class TestCaptureManager {
     try {
       const storagePath = path.join(process.cwd(), this.storageDir);
       const files = await fs.readdir(storagePath);
-      
+
       if (!files || !Array.isArray(files)) {
         console.error('Error reading directory: files is not an array', files);
         return [];
       }
-      
+
       const jsonFiles = files.filter(file => file.endsWith('.json'));
 
       const testCases = await Promise.all(

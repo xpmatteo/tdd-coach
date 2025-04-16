@@ -132,7 +132,13 @@
                 </div>
                 <!-- id and hx-preserve are meant to preserve the scroll positions during reload -->
                 <div class="card-body" id="prod-code-editor" hx-preserve="true">
-                    <textarea id="production-code" name="productionCode" class="form-control code-editor" style="height: 300px;">{{productionCode}}</textarea>
+                    <textarea id="production-code"
+                              name="productionCode"
+                              class="form-control code-editor"
+                              {{#unless isProductionCodeEditorEnabled}}
+                                disabled
+                              {{/unless}}
+                              style="height: 300px;">{{productionCode}}</textarea>
                 </div>
             </div>
         </div>
@@ -144,7 +150,13 @@
                 </div>
                 <!-- id and hx-preserve are meant to preserve the scroll positions during reload -->
                 <div class="card-body" id="test-code-editor" hx-preserve="true">
-                    <textarea id="test-code" name="testCode" class="form-control code-editor" style="height: 300px;">{{testCode}}</textarea>
+                    <textarea id="test-code"
+                              name="testCode"
+                              class="form-control code-editor"
+                              {{#unless isTestCodeEditorEnabled}}
+                                disabled
+                              {{/unless}}
+                              style="height: 300px;">{{testCode}}</textarea>
                 </div>
             </div>
         </div>
