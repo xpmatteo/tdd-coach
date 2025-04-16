@@ -15,7 +15,7 @@ exports.newSession = (req, res) => {
   const sessionId = uuidv4();
   const session = new Session('fizzbuzz');
   sessions.set(sessionId, session);
-
+  
   // Redirect to the session URL with ID
   res.redirect(`/session/${sessionId}`);
 };
@@ -23,12 +23,12 @@ exports.newSession = (req, res) => {
 exports.getSession = (req, res) => {
   const sessionId = req.params.id;
   const session = sessions.get(sessionId);
-
+  
   if (!session) {
     // Session not found, redirect to create a new one
     return res.redirect('/session/new');
   }
-
+  
   res.render('session', {
     sessionId,
     state: session.state,
@@ -47,27 +47,27 @@ exports.getSession = (req, res) => {
 exports.submitCode = async (req, res) => {
   const { sessionId, productionCode, testCode, selectedTestIndex } = req.body;
   const session = sessions.get(sessionId);
-
+  
   if (!session) {
     return res.status(404).send('Session not found');
   }
-
+  
   // Update session with latest code
   session.productionCode = productionCode;
   session.testCode = testCode;
-
+  
   // Store the selected test index if in PICK state
   if (session.state === 'PICK' && selectedTestIndex !== undefined) {
     session.selectedTestIndex = selectedTestIndex;
   }
-
+  
   // Get appropriate prompt for current state
   const prompt = getPrompt(session);
-
+  
   try {
     // Get LLM feedback with token tracking
     const feedback = await getLlmFeedback(prompt, session.tokenUsage);
-
+    
     // Capture interaction if test capture mode is enabled
     if (testCaptureManager.isPromptCaptureModeEnabled()) {
       session.captureInteraction({
@@ -80,12 +80,12 @@ exports.submitCode = async (req, res) => {
         llmResponse: feedback
       });
     }
-
+    
     // Process feedback and update session state if needed
     if (session.processSubmission(feedback) && feedback.proceed === 'yes') {
       session.advanceState();
     }
-
+    
     // Render updated view
     res.render('session', {
       sessionId,
@@ -98,9 +98,7 @@ exports.submitCode = async (req, res) => {
       selectedTestIndex: session.selectedTestIndex,
       proceed: feedback.proceed, // Pass proceed value to the view
       tokenUsage: session.tokenUsage.getStats(),
-      isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled(),
-      isProductionCodeEditorEnabled: session.state === 'GREEN' || session === 'REFACTOR',
-      isTestCodeEditorEnabled: session.state === 'RED' || session.state === 'REFACTOR',
+      isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
     });
   } catch (error) {
     console.error('Error getting LLM feedback:', error);
@@ -111,22 +109,22 @@ exports.submitCode = async (req, res) => {
 exports.getHint = async (req, res) => {
   const { sessionId } = req.body;
   const session = sessions.get(sessionId);
-
+  
   if (!session) {
     return res.status(404).send('Session not found');
   }
-
+  
   // Get appropriate prompt for current state
   const prompt = getPrompt(session);
-
+  
   try {
     // Get LLM hint with token tracking
     const feedback = await getLlmFeedback(prompt, session.tokenUsage);
-
+    
     // Return the hint and the proceed value for styling
-    res.json({
+    res.json({ 
       hint: feedback.hint,
-      proceed: feedback.proceed
+      proceed: feedback.proceed 
     });
   } catch (error) {
     console.error('Error getting hint:', error);
@@ -136,13 +134,13 @@ exports.getHint = async (req, res) => {
 
 exports.restartSession = (req, res) => {
   const { sessionId } = req.body;
-
+  
   // Create a fresh session
   const oldSession = sessions.get(sessionId);
   const newSession = new Session('fizzbuzz');
   newSession.tokenUsage = oldSession.tokenUsage; // Keep the same token usage tracker
   sessions.set(sessionId, newSession);
-
+  
   res.render('session', {
     sessionId,
     state: newSession.state,
