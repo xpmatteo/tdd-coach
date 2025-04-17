@@ -17,7 +17,7 @@ exports.newSession = (req, res) => {
   if (!fizzbuzzKata) {
     return res.status(404).send('FizzBuzz kata not found');
   }
-  
+
   // Create a new session with the FizzBuzz kata object
   const sessionId = uuidv4();
   const session = new Session(fizzbuzzKata);
@@ -49,7 +49,9 @@ const getSessionViewData = (sessionId, session, feedback = null, proceed = null)
     selectedTestIndex: session.selectedTestIndex,
     proceed: proceed,
     tokenUsage: session.tokenUsage.getStats(),
-    isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
+    isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled(),
+    isProductionCodeEditorEnabled: session.state == 'GREEN' || session.state == 'REFACTOR',
+    isTestCodeEditorEnabled: session.state == 'RED' || session.state == 'REFACTOR',
   };
 };
 

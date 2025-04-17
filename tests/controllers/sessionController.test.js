@@ -89,7 +89,9 @@ describe('Session Controller', () => {
         selectedTestIndex: '0',
         proceed: 'yes',
         tokenUsage: { formattedCost: '$0.01' },
-        isPromptCaptureModeEnabled: expect.any(Boolean)
+        isPromptCaptureModeEnabled: expect.any(Boolean),
+        isProductionCodeEditorEnabled: false,
+        isTestCodeEditorEnabled: true,
       });
     });
   });
@@ -131,6 +133,29 @@ describe('Session Controller', () => {
           proceed: null
         })
       );
+    });
+
+    [
+      {state: 'PICK', isProductionCodeEditorEnabled: false, isTestCodeEditorEnabled: false},
+      {state: 'RED', isProductionCodeEditorEnabled: false, isTestCodeEditorEnabled: true},
+      {state: 'GREEN', isProductionCodeEditorEnabled: true, isTestCodeEditorEnabled: false},
+      {state: 'REFACTOR', isProductionCodeEditorEnabled: true, isTestCodeEditorEnabled: true},
+    ].forEach(({state, isProductionCodeEditorEnabled, isTestCodeEditorEnabled}) => {
+      it(`enables appropriate editors in state ${state}`, async () => {
+        // Arrange
+        mockSession.state = state;
+
+        // Act
+        await sessionController.getSession(req, res);
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith('session',
+            expect.objectContaining({
+              isProductionCodeEditorEnabled,
+              isTestCodeEditorEnabled,
+            })
+        );
+      });
     });
   });
 });
