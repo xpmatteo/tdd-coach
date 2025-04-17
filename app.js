@@ -56,6 +56,12 @@ testCaptureManager.initialize().catch(err => {
   process.exit(1);
 });
 
+// Merge predefined sessions into sessionController.sessions
+const predefinedSessions = require('./models/predefinedSessions');
+Object.entries(predefinedSessions.sessions).forEach(([key, session]) => {
+  sessionController.sessions.set(key, session);
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`TDD Coach app listening at http://localhost:${PORT}`);
