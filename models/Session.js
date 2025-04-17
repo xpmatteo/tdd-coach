@@ -5,15 +5,14 @@ const TokenUsage = require('./TokenUsage');
 class Session {
   /**
    * Create a new TDD session
-   * @param {string} kataName - The name of the kata to use
+   * @param {Object} kata - The kata object to use
    */
-  constructor(kataName) {
-    const kata = katas[kataName];
+  constructor(kata) {
     if (!kata) {
-      throw new Error(`Kata ${kataName} not found`);
+      throw new Error('Kata object is required');
     }
 
-    this.kataName = kataName;
+    this.kataName = kata.name;
     this.testCases = structuredClone(kata.testCases); // Deep copy test cases
     this.productionCode = kata.initialProductionCode || '';
     this.testCode = kata.initialTestCode || '';
@@ -41,22 +40,6 @@ class Session {
       timestamp: new Date().toISOString(),
       id: Date.now().toString()
     };
-  }
-
-  /**
-   * Capture the last LLM interaction regardless of capture mode
-   * @param {Object} interactionData - Data about the interaction with the LLM
-   */
-  captureLastLlmInteraction(interactionData) {
-    this.lastLlmInteraction = { ...interactionData };
-  }
-
-  /**
-   * Get the last LLM interaction
-   * @returns {Object|null} - The last LLM interaction or null if none exists
-   */
-  getLastLlmInteraction() {
-    return this.lastLlmInteraction;
   }
 
   /**

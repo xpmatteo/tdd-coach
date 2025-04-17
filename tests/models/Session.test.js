@@ -2,7 +2,9 @@ const Session = require('../../models/Session');
 const PickState = require('../../models/states/PickState');
 const TokenUsage = require('../../models/TokenUsage');
 
-// Only mock the katas dependency
+// Mock dependencies
+jest.mock('../../models/TokenUsage');
+jest.mock('../../models/states/PickState');
 jest.mock('../../models/katas', () => ({
   testKata: {
     testCases: [
@@ -16,9 +18,42 @@ jest.mock('../../models/katas', () => ({
 }));
 
 describe('Session', () => {
+  let mockPickState;
+  let testKata;
+  
+  beforeEach(() => {
+    // Reset all mocks before each test
+    jest.clearAllMocks();
+    
+    // Setup test kata
+    testKata = {
+      name: 'testKata',
+      testCases: [
+        { description: 'Test case 1', status: 'TODO' },
+        { description: 'Test case 2', status: 'TODO' },
+        { description: 'Test case 3', status: 'DONE' }
+      ],
+      initialProductionCode: 'function example() {}',
+      initialTestCode: 'test("example", () => {});'
+    };
+    
+    // Setup PickState mock implementation
+    mockPickState = {
+      getName: jest.fn().mockReturnValue('PickState'),
+      onEnter: jest.fn(),
+      onExit: jest.fn(),
+      getNextState: jest.fn(),
+      canSelectTestCase: jest.fn().mockReturnValue(true),
+      processSubmission: jest.fn(),
+      getDescription: jest.fn().mockReturnValue('Pick a test case')
+    };
+    
+    PickState.mockImplementation(() => mockPickState);
+  });
+  
   describe('constructor', () => {
     test('should initialize with the correct kata data', () => {
-      const session = new Session('testKata');
+      const session = new Session(testKata);
       
       expect(session.kataName).toBe('testKata');
       expect(session.testCases).toHaveLength(3);
@@ -28,94 +63,65 @@ describe('Session', () => {
       expect(session.selectedTestIndex).toBeNull();
       expect(session.capturedInteraction).toBeNull();
       expect(session.lastLlmInteraction).toBeNull();
-      expect(session.state).toBe('PICK'); // Real PickState returns 'PICK'
-      expect(session.currentState).toBeInstanceOf(PickState);
-      expect(session.tokenUsage).toBeInstanceOf(TokenUsage);
+      expect(session.state).toBe('PickState');
+      expect(TokenUsage).toHaveBeenCalledTimes(1);
+      expect(PickState).toHaveBeenCalledWith(session);
     });
     
-    test('should throw an error if kata is not found', () => {
-      expect(() => new Session('nonExistentKata')).toThrow('Kata nonExistentKata not found');
+    test('should throw an error if kata is not provided', () => {
+      expect(() => new Session(null)).toThrow('Kata object is required');
     });
   });
   
   describe('state management', () => {
     let session;
+    let mockNextState;
     
     beforeEach(() => {
-      session = new Session('testKata');
+      session = new Session(testKata);
+      mockNextState = {
+        getName: jest.fn().mockReturnValue('NextState'),
+        onEnter: jest.fn(),
+        onExit: jest.fn(),
+        getNextState: jest.fn(),
+        canSelectTestCase: jest.fn(),
+        processSubmission: jest.fn(),
+        getDescription: jest.fn()
+      };
+      mockPickState.getNextState.mockReturnValue(mockNextState);
     });
     
     test('should set current state correctly', () => {
-      // Create a real state object with minimum necessary implementation
-      class TestState {
-        constructor(session) {
-          this.session = session;
-        }
-        
-        getName() { return 'TEST'; }
-        onEnter() {}
-        onExit() {}
-      }
+      const newState = {
+        getName: jest.fn().mockReturnValue('NewState'),
+        onEnter: jest.fn(),
+        onExit: jest.fn()
+      };
       
-      // Create a spy to verify onExit is called on the previous state
-      const origState = session.currentState;
-      const exitSpy = jest.spyOn(origState, 'onExit');
-      const enterSpy = jest.spyOn(TestState.prototype, 'onEnter');
-      
-      const newState = new TestState(session);
       const result = session.setCurrentState(newState);
       
-      expect(exitSpy).toHaveBeenCalledTimes(1);
-      expect(enterSpy).toHaveBeenCalledTimes(1);
+      expect(mockPickState.onExit).toHaveBeenCalledTimes(1);
+      expect(newState.onEnter).toHaveBeenCalledTimes(1);
       expect(session.currentState).toBe(newState);
-      expect(session.state).toBe('TEST');
-      expect(result).toBe('TEST');
-      
-      // Clean up
-      exitSpy.mockRestore();
-      enterSpy.mockRestore();
+      expect(session.state).toBe('NewState');
+      expect(result).toBe('NewState');
     });
     
     test('should advance to the next state', () => {
-      // Create a spy to verify getNextState is called
-      const getNextStateSpy = jest.spyOn(session.currentState, 'getNextState');
-      
-      // We need to implement a minimal next state that the real PickState would return
-      class NextTestState {
-        constructor(session) {
-          this.session = session;
-        }
-        
-        getName() { return 'NEXT_TEST'; }
-        onEnter() {}
-        onExit() {}
-      }
-      
-      // Mock the implementation temporarily for this test
-      getNextStateSpy.mockImplementation(() => new NextTestState(session));
-      
       const result = session.advanceState();
       
-      expect(getNextStateSpy).toHaveBeenCalledTimes(1);
-      expect(session.state).toBe('NEXT_TEST');
-      expect(result).toBe('NEXT_TEST');
-      
-      // Clean up
-      getNextStateSpy.mockRestore();
+      expect(mockPickState.getNextState).toHaveBeenCalledTimes(1);
+      expect(session.currentState).toBe(mockNextState);
+      expect(result).toBe('NextState');
     });
     
     test('should get state description', () => {
-      const descriptionSpy = jest.spyOn(session.currentState, 'getDescription');
-      const mockDescription = 'Test description';
-      descriptionSpy.mockReturnValue(mockDescription);
+      mockPickState.getDescription.mockReturnValue('Test description');
       
       const result = session.getStateDescription();
       
-      expect(descriptionSpy).toHaveBeenCalledTimes(1);
-      expect(result).toBe(mockDescription);
-      
-      // Clean up
-      descriptionSpy.mockRestore();
+      expect(mockPickState.getDescription).toHaveBeenCalledTimes(1);
+      expect(result).toBe('Test description');
     });
   });
   
@@ -123,67 +129,38 @@ describe('Session', () => {
     let session;
     
     beforeEach(() => {
-      session = new Session('testKata');
+      session = new Session(testKata);
     });
     
     test('should check if test case selection is allowed', () => {
-      const canSelectSpy = jest.spyOn(session.currentState, 'canSelectTestCase');
-      canSelectSpy.mockReturnValue(true);
+      mockPickState.canSelectTestCase.mockReturnValue(true);
       
       const result = session.canSelectTestCase();
       
-      expect(canSelectSpy).toHaveBeenCalledTimes(1);
+      expect(mockPickState.canSelectTestCase).toHaveBeenCalledTimes(1);
       expect(result).toBe(true);
-      
-      // Clean up
-      canSelectSpy.mockRestore();
     });
     
     test('should select a test case successfully', () => {
-      // Ensure the current state allows selection
-      const canSelectSpy = jest.spyOn(session.currentState, 'canSelectTestCase');
-      canSelectSpy.mockReturnValue(true);
-      
       session.selectTestCase(0);
       
       expect(session.currentTestIndex).toBe(0);
       expect(session.testCases[0].status).toBe('IN_PROGRESS');
-      
-      // Clean up
-      canSelectSpy.mockRestore();
     });
     
     test('should throw an error when selecting test case in invalid state', () => {
-      const canSelectSpy = jest.spyOn(session.currentState, 'canSelectTestCase');
-      canSelectSpy.mockReturnValue(false);
+      mockPickState.canSelectTestCase.mockReturnValue(false);
       
-      expect(() => session.selectTestCase(0)).toThrow(`Cannot select test case in ${session.state} state`);
-      
-      // Clean up
-      canSelectSpy.mockRestore();
+      expect(() => session.selectTestCase(0)).toThrow(`Cannot select test case in PickState state`);
     });
     
     test('should throw an error when selecting an invalid test case index', () => {
-      // Ensure the current state allows selection
-      const canSelectSpy = jest.spyOn(session.currentState, 'canSelectTestCase');
-      canSelectSpy.mockReturnValue(true);
-      
       expect(() => session.selectTestCase(-1)).toThrow('Invalid test case index');
       expect(() => session.selectTestCase(3)).toThrow('Invalid test case index');
-      
-      // Clean up
-      canSelectSpy.mockRestore();
     });
     
     test('should throw an error when selecting a test case not in TODO state', () => {
-      // Ensure the current state allows selection
-      const canSelectSpy = jest.spyOn(session.currentState, 'canSelectTestCase');
-      canSelectSpy.mockReturnValue(true);
-      
       expect(() => session.selectTestCase(2)).toThrow('Test case not in TODO state: DONE');
-      
-      // Clean up
-      canSelectSpy.mockRestore();
     });
   });
   
@@ -193,7 +170,7 @@ describe('Session', () => {
     
     beforeEach(() => {
       originalEnv = process.env.PROMPT_CAPTURE_MODE;
-      session = new Session('testKata');
+      session = new Session(testKata);
     });
     
     afterEach(() => {
@@ -261,21 +238,17 @@ describe('Session', () => {
     let session;
     
     beforeEach(() => {
-      session = new Session('testKata');
+      session = new Session(testKata);
+      mockPickState.processSubmission.mockReturnValue(true);
     });
     
     test('should process submission correctly', () => {
-      const processSubmissionSpy = jest.spyOn(session.currentState, 'processSubmission');
-      processSubmissionSpy.mockReturnValue(true);
-      
       const feedback = { result: 'success' };
+      
       const result = session.processSubmission(feedback);
       
-      expect(processSubmissionSpy).toHaveBeenCalledWith(feedback);
+      expect(mockPickState.processSubmission).toHaveBeenCalledWith(feedback);
       expect(result).toBe(true);
-      
-      // Clean up
-      processSubmissionSpy.mockRestore();
     });
   });
 });

@@ -1,3 +1,5 @@
+const katas = require('../models/katas');
+
 /**
  * Predefined TDD sessions for special use cases
  */
@@ -15,7 +17,7 @@ const TokenUsage = require('./TokenUsage');
  */
 function createFizzBuzzHalfwaySession() {
   // Create a new FizzBuzz session
-  const session = new Session('fizzbuzz');
+  const session = new Session(katas['fizzbuzz']);
 
   // Set up production code for completed tests (1, 2, 3)
   session.productionCode = `function fizzBuzz(number) {

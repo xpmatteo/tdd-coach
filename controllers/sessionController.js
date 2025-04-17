@@ -3,6 +3,7 @@ const { getLlmFeedback } = require('../services/llmService');
 const Session = require('../models/Session');
 const testCaptureManager = require('../models/testCapture/TestCaptureManager');
 const { v4: uuidv4 } = require('uuid');
+const katas = require('../models/katas');
 
 // Store active sessions in memory (replace with proper storage in production)
 const sessions = new Map();
@@ -11,9 +12,15 @@ const sessions = new Map();
 exports.sessions = sessions;
 
 exports.newSession = (req, res) => {
-  // Create a new session for FizzBuzz kata
+  // Get the FizzBuzz kata object
+  const fizzbuzzKata = katas['fizzbuzz'];
+  if (!fizzbuzzKata) {
+    return res.status(404).send('FizzBuzz kata not found');
+  }
+  
+  // Create a new session with the FizzBuzz kata object
   const sessionId = uuidv4();
-  const session = new Session('fizzbuzz');
+  const session = new Session(fizzbuzzKata);
   sessions.set(sessionId, session);
 
   // Redirect to the session URL with ID
@@ -158,9 +165,15 @@ exports.getHint = async (req, res) => {
 exports.restartSession = (req, res) => {
   const { sessionId } = req.body;
 
+  // Get the FizzBuzz kata object
+  const fizzbuzzKata = katas['fizzbuzz'];
+  if (!fizzbuzzKata) {
+    return res.status(500).send('FizzBuzz kata not found');
+  }
+
   // Create a fresh session
   const oldSession = sessions.get(sessionId);
-  const newSession = new Session('fizzbuzz');
+  const newSession = new Session(fizzbuzzKata);
   newSession.tokenUsage = oldSession.tokenUsage; // Keep the same token usage tracker
   sessions.set(sessionId, newSession);
 
