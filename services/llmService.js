@@ -5,7 +5,7 @@ const client = new Anthropic({
 });
 
 const CHEAP_MODEL = 'claude-3-5-haiku-20241022';
-const BEST_MODEL = 'claude-3-5-sonnet-20240620';
+const BEST_MODEL = 'claude-3-7-sonnet-latest';
 
 /**
  * Gets feedback from the LLM using the provided prompt
