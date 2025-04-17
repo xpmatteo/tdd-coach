@@ -20,6 +20,23 @@ exports.newSession = (req, res) => {
   res.redirect(`/session/${sessionId}`);
 };
 
+// Helper function to prepare session view data
+const getSessionViewData = (sessionId, session, feedback = null, proceed = null) => {
+  return {
+    sessionId,
+    state: session.state,
+    stateDescription: session.getStateDescription(),
+    testCases: session.testCases,
+    productionCode: session.productionCode,
+    testCode: session.testCode,
+    feedback: feedback || session.feedback || "Welcome to the FizzBuzz kata! Let's get started with TDD.",
+    selectedTestIndex: session.selectedTestIndex,
+    proceed: proceed,
+    tokenUsage: session.tokenUsage.getStats(),
+    isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
+  };
+};
+
 exports.getSession = (req, res) => {
   const sessionId = req.params.id;
   const session = sessions.get(sessionId);
@@ -29,19 +46,8 @@ exports.getSession = (req, res) => {
     return res.redirect('/session/new');
   }
   
-  res.render('session', {
-    sessionId,
-    state: session.state,
-    stateDescription: session.getStateDescription(),
-    testCases: session.testCases,
-    productionCode: session.productionCode,
-    testCode: session.testCode,
-    feedback: session.feedback || "Welcome to the FizzBuzz kata! Let's get started with TDD.",
-    selectedTestIndex: null,
-    proceed: null, // No proceed value for initial welcome message
-    tokenUsage: session.tokenUsage.getStats(),
-    isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
-  });
+  const viewData = getSessionViewData(sessionId, session);
+  res.render('session', viewData);
 };
 
 exports.submitCode = async (req, res) => {
@@ -87,19 +93,8 @@ exports.submitCode = async (req, res) => {
     }
     
     // Render updated view
-    res.render('session', {
-      sessionId,
-      state: session.state,
-      stateDescription: session.getStateDescription(),
-      testCases: session.testCases,
-      productionCode: session.productionCode,
-      testCode: session.testCode,
-      feedback: feedback.comments,
-      selectedTestIndex: session.selectedTestIndex,
-      proceed: feedback.proceed, // Pass proceed value to the view
-      tokenUsage: session.tokenUsage.getStats(),
-      isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
-    });
+    const viewData = getSessionViewData(sessionId, session, feedback.comments, feedback.proceed);
+    res.render('session', viewData);
   } catch (error) {
     console.error('Error getting LLM feedback:', error);
     res.status(500).send('Error processing your submission');
@@ -141,17 +136,6 @@ exports.restartSession = (req, res) => {
   newSession.tokenUsage = oldSession.tokenUsage; // Keep the same token usage tracker
   sessions.set(sessionId, newSession);
   
-  res.render('session', {
-    sessionId,
-    state: newSession.state,
-    stateDescription: newSession.getStateDescription(),
-    testCases: newSession.testCases,
-    productionCode: newSession.productionCode,
-    testCode: newSession.testCode,
-    feedback: "Session restarted. Let's begin again!",
-    selectedTestIndex: null,
-    proceed: null, // No proceed value for restart message
-    tokenUsage: newSession.tokenUsage.getStats(),
-    isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled()
-  });
+  const viewData = getSessionViewData(sessionId, newSession, "Session restarted. Let's begin again!", null);
+  res.render('session', viewData);
 };

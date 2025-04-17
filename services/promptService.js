@@ -35,9 +35,10 @@ exports.getPrompt = (session) => {
   }
 
   // Determine current test case being worked on
-  const currentTest = session.currentTestIndex !== null
-    ? session.testCases[session.currentTestIndex]
-    : null;
+  let currentTest = null;
+  if (session.currentTestIndex !== null) {
+    currentTest = session.testCases[session.currentTestIndex];
+  }
 
   // Prepare context for template
   const context = {

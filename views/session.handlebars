@@ -212,37 +212,6 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize CodeMirror for production code
-        window.productionEditor = CodeMirror.fromTextArea(document.getElementById('production-code'), {
-            mode: 'javascript',
-            lineNumbers: true,
-            theme: 'default',
-            indentUnit: 2,
-            tabSize: 2,
-            height: '300px'
-        });
-
-        // Set fixed height for the CodeMirror editors
-        document.querySelectorAll('.CodeMirror').forEach(function(editor) {
-            editor.style.height = '300px';
-        });
-
-        // Initialize CodeMirror for test code
-        window.testEditor = CodeMirror.fromTextArea(document.getElementById('test-code'), {
-            mode: 'javascript',
-            lineNumbers: true,
-            theme: 'default',
-            indentUnit: 2,
-            tabSize: 2,
-            height: '300px'
-        });
-
-        // Update textareas before form submission
-        document.getElementById('code-form').addEventListener('submit', function() {
-            window.productionEditor.save();
-            window.testEditor.save();
-        });
-
         // Handle hint retrieval, visibility and styling
         document.addEventListener('htmx:afterRequest', function(event) {
             // Check if this is a hint request
