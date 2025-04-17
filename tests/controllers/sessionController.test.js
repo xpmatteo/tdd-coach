@@ -10,11 +10,11 @@ jest.mock('uuid', () => ({ v4: () => 'test-session-id' }));
 describe('Session Controller', () => {
   let req, res;
   let mockSession;
-  
+
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
-    
+
     // Create mock request and response objects
     req = {
       params: { id: 'test-session-id' },
@@ -25,14 +25,14 @@ describe('Session Controller', () => {
         selectedTestIndex: '0'
       }
     };
-    
+
     res = {
       render: jest.fn(),
       redirect: jest.fn(),
       status: jest.fn().mockReturnThis(),
       send: jest.fn()
     };
-    
+
     // Create mock session
     mockSession = {
       state: 'RED',
@@ -51,10 +51,10 @@ describe('Session Controller', () => {
       captureLastLlmInteraction: jest.fn(),
       getLastLlmInteraction: jest.fn().mockReturnValue(null)
     };
-    
+
     // Mocking sessions Map
     sessionController.sessions.set('test-session-id', mockSession);
-    
+
     // Mock LLM service response
     llmService.getLlmFeedback.mockResolvedValue({
       comments: 'Great job!',
@@ -62,7 +62,7 @@ describe('Session Controller', () => {
       proceed: 'yes'
     });
   });
-  
+
   describe('submitCode', () => {
     it('should store last LLM interaction and use it for view rendering', async () => {
       // Arrange
@@ -72,10 +72,10 @@ describe('Session Controller', () => {
         proceed: 'yes'
       };
       llmService.getLlmFeedback.mockResolvedValue(llmResponse);
-      
+
       // Act
       await sessionController.submitCode(req, res);
-      
+
       // Assert
       // Check that captureLastLlmInteraction was called with the right data
       expect(mockSession.captureLastLlmInteraction).toHaveBeenCalledWith(
@@ -87,53 +87,60 @@ describe('Session Controller', () => {
           llmResponse
         })
       );
-      
+
       // Check that the view was rendered with the right data
-      expect(res.render).toHaveBeenCalledWith('session', 
-        expect.objectContaining({
-          feedback: 'Good test!',
-          proceed: 'yes'
-        })
-      );
+      expect(res.render).toHaveBeenCalledWith('session', {
+        sessionId: 'test-session-id',
+        state: 'RED',
+        stateDescription: 'Write a failing test',
+        testCases: [{ description: 'Test 1', status: 'IN_PROGRESS' }],
+        productionCode: 'function fizzbuzz() {}',
+        testCode: 'test("fizzbuzz", () => {});',
+        feedback: 'Good test!',
+        selectedTestIndex: '0',
+        proceed: 'yes',
+        tokenUsage: { formattedCost: '$0.01' },
+        isPromptCaptureModeEnabled: expect.any(Boolean)
+      });
     });
-    
+
     it('should capture interaction for prompt testing when enabled', async () => {
       // Arrange
       // Mock the testCaptureManager to avoid relying on env vars in tests
       const testCaptureManager = require('../../models/testCapture/TestCaptureManager');
       const originalIsEnabled = testCaptureManager.isPromptCaptureModeEnabled;
       testCaptureManager.isPromptCaptureModeEnabled = jest.fn().mockReturnValue(true);
-      
+
       // Act
       await sessionController.submitCode(req, res);
-      
+
       // Assert
       expect(mockSession.captureInteraction).toHaveBeenCalled();
       expect(mockSession.captureLastLlmInteraction).toHaveBeenCalled();
-      
+
       // Restore original method
       testCaptureManager.isPromptCaptureModeEnabled = originalIsEnabled;
     });
-    
+
     it('should not call captureInteraction when prompt capture mode is disabled', async () => {
       // Arrange
       // Mock the testCaptureManager to avoid relying on env vars in tests
       const testCaptureManager = require('../../models/testCapture/TestCaptureManager');
       const originalIsEnabled = testCaptureManager.isPromptCaptureModeEnabled;
       testCaptureManager.isPromptCaptureModeEnabled = jest.fn().mockReturnValue(false);
-      
+
       // Act
       await sessionController.submitCode(req, res);
-      
+
       // Assert
       expect(mockSession.captureInteraction).not.toHaveBeenCalled();
       expect(mockSession.captureLastLlmInteraction).toHaveBeenCalled(); // Still captures last interaction
-      
+
       // Restore original method
       testCaptureManager.isPromptCaptureModeEnabled = originalIsEnabled;
     });
   });
-  
+
   describe('getSession', () => {
     it('should use last LLM interaction for feedback if available', async () => {
       // Arrange
@@ -144,28 +151,28 @@ describe('Session Controller', () => {
         }
       };
       mockSession.getLastLlmInteraction.mockReturnValue(lastInteraction);
-      
+
       // Act
       await sessionController.getSession(req, res);
-      
+
       // Assert
-      expect(res.render).toHaveBeenCalledWith('session', 
+      expect(res.render).toHaveBeenCalledWith('session',
         expect.objectContaining({
           feedback: 'Previously stored feedback',
           proceed: 'no'
         })
       );
     });
-    
+
     it('should use default welcome message when no previous LLM interaction exists', async () => {
       // Arrange
       mockSession.getLastLlmInteraction.mockReturnValue(null);
-      
+
       // Act
       await sessionController.getSession(req, res);
-      
+
       // Assert
-      expect(res.render).toHaveBeenCalledWith('session', 
+      expect(res.render).toHaveBeenCalledWith('session',
         expect.objectContaining({
           feedback: expect.stringContaining('Welcome to the FizzBuzz kata'),
           proceed: null
