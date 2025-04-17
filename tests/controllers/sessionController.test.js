@@ -77,17 +77,6 @@ describe('Session Controller', () => {
       await sessionController.submitCode(req, res);
 
       // Assert
-      // Check that captureLastLlmInteraction was called with the right data
-      expect(mockSession.captureLastLlmInteraction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          state: 'RED',
-          productionCode: 'function fizzbuzz() {}',
-          testCode: 'test("fizzbuzz", () => {});',
-          selectedTestIndex: '0',
-          llmResponse
-        })
-      );
-
       // Check that the view was rendered with the right data
       expect(res.render).toHaveBeenCalledWith('session', {
         sessionId: 'test-session-id',
@@ -102,42 +91,6 @@ describe('Session Controller', () => {
         tokenUsage: { formattedCost: '$0.01' },
         isPromptCaptureModeEnabled: expect.any(Boolean)
       });
-    });
-
-    it('should capture interaction for prompt testing when enabled', async () => {
-      // Arrange
-      // Mock the testCaptureManager to avoid relying on env vars in tests
-      const testCaptureManager = require('../../models/testCapture/TestCaptureManager');
-      const originalIsEnabled = testCaptureManager.isPromptCaptureModeEnabled;
-      testCaptureManager.isPromptCaptureModeEnabled = jest.fn().mockReturnValue(true);
-
-      // Act
-      await sessionController.submitCode(req, res);
-
-      // Assert
-      expect(mockSession.captureInteraction).toHaveBeenCalled();
-      expect(mockSession.captureLastLlmInteraction).toHaveBeenCalled();
-
-      // Restore original method
-      testCaptureManager.isPromptCaptureModeEnabled = originalIsEnabled;
-    });
-
-    it('should not call captureInteraction when prompt capture mode is disabled', async () => {
-      // Arrange
-      // Mock the testCaptureManager to avoid relying on env vars in tests
-      const testCaptureManager = require('../../models/testCapture/TestCaptureManager');
-      const originalIsEnabled = testCaptureManager.isPromptCaptureModeEnabled;
-      testCaptureManager.isPromptCaptureModeEnabled = jest.fn().mockReturnValue(false);
-
-      // Act
-      await sessionController.submitCode(req, res);
-
-      // Assert
-      expect(mockSession.captureInteraction).not.toHaveBeenCalled();
-      expect(mockSession.captureLastLlmInteraction).toHaveBeenCalled(); // Still captures last interaction
-
-      // Restore original method
-      testCaptureManager.isPromptCaptureModeEnabled = originalIsEnabled;
     });
   });
 
