@@ -89,6 +89,8 @@ The LLM service:
 - Requests responses in JSON format
 - Extracts feedback comments, hints, and a binary proceed/don't proceed signal
 - Tracks token usage and calculates estimated costs based on Anthropic's pricing
+- Always stores the last LLM interaction in the session for consistent feedback rendering
+- Separates test capture functionality from regular LLM interaction tracking
 
 ### 5. UI Architecture
 

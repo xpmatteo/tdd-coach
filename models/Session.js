@@ -20,10 +20,11 @@ class Session {
     this.currentTestIndex = null;
     this.selectedTestIndex = null;
     this.capturedInteraction = null;
+    this.lastLlmInteraction = null;
 
     // Initialize with PICK state
     this.setCurrentState(new PickState(this));
-    
+
     // Initialize token usage tracking
     this.tokenUsage = new TokenUsage();
   }
@@ -34,14 +35,46 @@ class Session {
    */
   captureInteraction(interactionData) {
     if (process.env.PROMPT_CAPTURE_MODE !== 'true') return;
-    
+
     this.capturedInteraction = {
       ...interactionData,
       timestamp: new Date().toISOString(),
       id: Date.now().toString()
     };
   }
-  
+
+  /**
+   * Capture the last LLM interaction regardless of capture mode
+   * @param {Object} interactionData - Data about the interaction with the LLM
+   */
+  captureLastLlmInteraction(interactionData) {
+    this.lastLlmInteraction = { ...interactionData };
+  }
+
+  /**
+   * Get the last LLM interaction
+   * @returns {Object|null} - The last LLM interaction or null if none exists
+   */
+  getLastLlmInteraction() {
+    return this.lastLlmInteraction;
+  }
+
+  /**
+   * Capture the last LLM interaction regardless of capture mode
+   * @param {Object} interactionData - Data about the interaction with the LLM
+   */
+  captureLastLlmInteraction(interactionData) {
+    this.lastLlmInteraction = { ...interactionData };
+  }
+
+  /**
+   * Get the last LLM interaction
+   * @returns {Object|null} - The last LLM interaction or null if none exists
+   */
+  getLastLlmInteraction() {
+    return this.lastLlmInteraction;
+  }
+
   /**
    * Get the currently captured interaction
    * @returns {Object|null} - The captured interaction or null
@@ -49,7 +82,7 @@ class Session {
   getCurrentCapture() {
     return this.capturedInteraction;
   }
-  
+
   /**
    * Clear the captured interaction
    */
@@ -120,7 +153,7 @@ class Session {
   processSubmission(feedback) {
     return this.currentState.processSubmission(feedback);
   }
-  
+
   /**
    * Get the description of the current state's task
    * @returns {string} The description of the current state

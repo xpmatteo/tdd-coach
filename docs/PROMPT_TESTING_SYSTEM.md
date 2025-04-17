@@ -20,6 +20,7 @@ The Prompt Testing System is a comprehensive framework for capturing, managing, 
 - Provides UI for saving interesting scenarios as test cases
 - Stores test cases as JSON files with descriptive filenames
 - *Session-based interaction capture (prevents data overwrites in multi-user scenarios)*
+- *Separates test case capture functionality from regular LLM interaction tracking*
 
 ### 2. Test Case Management (Planned)
 - Interactive UI for creating and managing test cases
