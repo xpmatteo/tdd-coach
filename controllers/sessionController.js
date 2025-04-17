@@ -52,6 +52,7 @@ const getSessionViewData = (sessionId, session, feedback = null, proceed = null)
     isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled(),
     isProductionCodeEditorEnabled: session.state == 'GREEN' || session.state == 'REFACTOR',
     isTestCodeEditorEnabled: session.state == 'RED' || session.state == 'REFACTOR',
+    mockModeEnabled: lastInteraction && lastInteraction.mockModeEnabled
   };
 };
 
@@ -69,7 +70,7 @@ exports.getSession = (req, res) => {
 };
 
 exports.submitCode = async (req, res) => {
-  const { sessionId, productionCode, testCode, selectedTestIndex } = req.body;
+  const { sessionId, productionCode, testCode, selectedTestIndex, mockMode } = req.body;
   const session = sessions.get(sessionId);
 
   if (!session) {
@@ -89,8 +90,20 @@ exports.submitCode = async (req, res) => {
   const prompt = getPrompt(session);
 
   try {
-    // Get LLM feedback with token tracking
-    const feedback = await getLlmFeedback(prompt, session.tokenUsage);
+    let feedback;
+    
+    // Check if mock mode is enabled
+    if (mockMode === 'on') {
+      // Create a fake positive response without calling the LLM
+      feedback = {
+        comments: `Mock mode is enabled. Automatically approving your ${session.state} state submission.`,
+        hint: "This is a mock hint. Mock mode is enabled, so no real feedback is provided.",
+        proceed: 'yes'
+      };
+    } else {
+      // Normal flow - get LLM feedback with token tracking
+      feedback = await getLlmFeedback(prompt, session.tokenUsage);
+    }
 
     // Always capture the last LLM interaction, regardless of capture mode
     const interactionData = {
@@ -100,7 +113,8 @@ exports.submitCode = async (req, res) => {
       testCases: session.testCases,
       selectedTestIndex: session.selectedTestIndex,
       currentTestIndex: session.currentTestIndex,
-      llmResponse: feedback
+      llmResponse: feedback,
+      mockModeEnabled: mockMode === 'on'
     };
 
     session.captureLastLlmInteraction(interactionData);
@@ -125,7 +139,7 @@ exports.submitCode = async (req, res) => {
 };
 
 exports.getHint = async (req, res) => {
-  const { sessionId } = req.body;
+  const { sessionId, mockMode } = req.body;
   const session = sessions.get(sessionId);
 
   if (!session) {
@@ -136,8 +150,20 @@ exports.getHint = async (req, res) => {
   const prompt = getPrompt(session);
 
   try {
-    // Get LLM hint with token tracking
-    const feedback = await getLlmFeedback(prompt, session.tokenUsage);
+    let feedback;
+    
+    // Check if mock mode is enabled
+    if (mockMode === 'on') {
+      // Create a fake positive response without calling the LLM
+      feedback = {
+        comments: `Mock mode enabled. Auto-approving ${session.state} state.`,
+        hint: "This is a mock hint since mock mode is enabled.",
+        proceed: 'yes'
+      };
+    } else {
+      // Get LLM hint with token tracking
+      feedback = await getLlmFeedback(prompt, session.tokenUsage);
+    }
 
     // Capture this interaction as well
     const interactionData = {
@@ -148,7 +174,8 @@ exports.getHint = async (req, res) => {
       selectedTestIndex: session.selectedTestIndex,
       currentTestIndex: session.currentTestIndex,
       llmResponse: feedback,
-      isHintRequest: true
+      isHintRequest: true,
+      mockModeEnabled: mockMode === 'on'
     };
 
     session.captureLastLlmInteraction(interactionData);

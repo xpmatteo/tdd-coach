@@ -90,6 +90,7 @@ The LLM service:
 - Extracts feedback comments, hints, and a binary proceed/don't proceed signal
 - Tracks token usage and calculates estimated costs based on Anthropic's pricing
 - Always stores the last LLM interaction in the session for consistent feedback rendering
+- Supports a mock mode toggle that skips API calls and provides fake positive responses for testing and development
 - Separates test capture functionality from regular LLM interaction tracking
 
 ### 5. UI Architecture

@@ -193,6 +193,10 @@
 
     <div class="row mt-2">
         <div class="col-12 text-center">
+            <div class="form-check form-switch d-inline-block me-3">
+                <input class="form-check-input" type="checkbox" id="mockModeToggle" name="mockMode" value="on" {{#if mockModeEnabled}}checked{{/if}}>
+                <label class="form-check-label" for="mockModeToggle">Skip AI</label>
+            </div>
             <button type="submit" class="btn btn-primary">
                 Submit
                 <span class="htmx-indicator ms-1"><span class="spinner" style="width: 1rem; height: 1rem;"></span></span>
@@ -201,7 +205,7 @@
             <button type="button" id="help-btn" class="btn btn-secondary ms-2"
                     hx-post="/session/hint"
                     hx-swap="none"
-                    hx-vals='{"sessionId": "{{sessionId}}"}'
+                    hx-vals='js:{"sessionId": "{{sessionId}}", "mockMode": document.getElementById("mockModeToggle").checked ? "on" : "off"}'
                     hx-indicator="#feedback-loading">
                 Help Me
                 <span class="htmx-indicator ms-1"><span class="spinner" style="width: 1rem; height: 1rem;"></span></span>
