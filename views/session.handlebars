@@ -1,10 +1,4 @@
 <style>
-    /* Fixed height for CodeMirror editors */
-    .CodeMirror {
-        height: 300px !important;
-        border: 1px solid #ddd;
-    }
-
     /* Fixed height for test list */
     .test-list-container {
         max-height: 300px;
@@ -65,6 +59,12 @@
         align-items: center;
         z-index: 10;
         border-radius: 0.25rem;
+    }
+
+    /* Readonly editors look */
+    textarea[readonly] {
+        background-color: #f8f9fa; /* Light gray */
+        cursor: not-allowed;
     }
 
     @keyframes spinner {
@@ -131,7 +131,11 @@
                     <h3 class="h6 mb-0">Production Code</h3>
                 </div>
                 <div class="card-body">
-                    <textarea id="production-code" name="productionCode" class="form-control code-editor" style="height: 300px;">{{productionCode}}</textarea>
+                    <textarea id="production-code"
+                              name="productionCode"
+                              class="form-control code-editor"
+                              {{#unless isProductionCodeEditorEnabled}}readonly{{/unless}}
+                              style="height: 300px;">{{productionCode}}</textarea>
                 </div>
             </div>
         </div>
@@ -142,7 +146,11 @@
                     <h3 class="h6 mb-0">Test Code</h3>
                 </div>
                 <div class="card-body">
-                    <textarea id="test-code" name="testCode" class="form-control code-editor" style="height: 300px;">{{testCode}}</textarea>
+                    <textarea id="test-code"
+                              name="testCode"
+                              class="form-control code-editor"
+                              {{#unless isTestCodeEditorEnabled}}readonly{{/unless}}
+                              style="height: 300px;">{{testCode}}</textarea>
                 </div>
             </div>
         </div>
