@@ -1,0 +1,32 @@
+I'm working on the {{kataName}} kata using Test-Driven Development.
+
+Current test cases:
+{{#each testCases}}
+- [{{#if (eq status "DONE")}}✓{{else if (eq status "IN_PROGRESS")}}🚧{{else}}□{{/if}}] {{description}}
+{{/each}}
+
+Current production code:
+```javascript
+{{productionCode}}
+```
+
+Current test code:
+```javascript
+{{testCode}}
+```
+
+{{#if currentTest}}
+I am currently working on this test case:
+```
+{{currentTest.description}}
+```
+{{else if selectedTestIndex}}
+I'm considering selecting this test case next:
+```
+{{lookup testCases selectedTestIndex "description"}}
+```
+{{else}}
+I have not yet selected a test case.
+{{/if}}
+
+Please evaluate my test case selection and provide feedback.

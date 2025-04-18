@@ -95,19 +95,38 @@ This pattern:
 
 The application uses Handlebars templates to generate prompts for the LLM, with different templates for each state in the TDD cycle:
 
-- `pick.hbs`: Guides the user in selecting the next test case
-- `red.hbs`: Evaluates if the test properly fails for the right reason
-- `green.hbs`: Evaluates if the implementation makes the test pass
-- `refactor.hbs`: Evaluates code quality improvements
+#### System Prompts
+Each state has a dedicated system prompt template that defines:
+- The coaching persona (Kent Beck)
+- State-specific evaluation criteria
+- Response format requirements
+- Guidelines for feedback style
 
-Each prompt template includes a section for code execution results, providing the LLM with concrete information about how the user's code actually behaves when executed.
+System prompts are located in `/prompts/system/`:
+- `pick.hbs`: Instructions for evaluating test case selection
+- `red.hbs`: Instructions for evaluating failing tests
+- `green.hbs`: Instructions for evaluating implementations
+- `refactor.hbs`: Instructions for evaluating code improvements
 
-The "Help Me" hint feature adopts the same color scheme as the main feedback, using matching border colors to provide a consistent visual experience.
+#### User Prompts
+Each state also has a dedicated user prompt template that provides:
+- Current test case list and status
+- Production and test code
+- Selected or in-progress test case
+- Code execution results (when applicable)
+
+User prompts are located in `/prompts/user/`:
+- `pick.hbs`: Context for test case selection
+- `red.hbs`: Context for test writing phase
+- `green.hbs`: Context for implementation phase
+- `refactor.hbs`: Context for code refactoring phase
+
+This separation leverages Claude's system/user message design, with system prompts providing persistent instructions and user prompts containing the content to evaluate.
 
 ### 5. LLM Integration
 
 The LLM service:
-- Sends formatted prompts to the Anthropic Claude API
+- Sends formatted prompts to the Anthropic Claude API using system and user messages
 - Requests responses in JSON format
 - Extracts feedback comments, hints, and a binary proceed/don't proceed signal
 - Tracks token usage and calculates estimated costs based on Anthropic's pricing
@@ -134,7 +153,7 @@ HTMX is used for dynamic updates without a separate frontend framework.
 
 1. User selects a test case or submits code
 2. When not in PICK state, the server executes the code and captures execution results
-3. Server updates session state and generates appropriate LLM prompt (including execution results)
+3. Server updates session state and generates appropriate system and user prompts (including execution results)
 4. LLM evaluates code and returns structured feedback
 5. Server processes feedback using state-specific logic and applies visual styling (green/pink) based on the "proceed" field 
 6. If feedback processing indicates success, session advances to next state
@@ -202,6 +221,7 @@ HTMX is used for dynamic updates without a separate frontend framework.
 3. **Structure**: Responses are structured as JSON with comments, hints, and proceed fields
 4. **Educational**: Feedback is designed to be instructive rather than just evaluative
 5. **State-Specific**: Different prompts for different states, with specialized handling
+6. **System/User Separation**: Instructions in system prompts, content to evaluate in user prompts
 
 ## Benefits of Code Execution
 
@@ -223,3 +243,14 @@ Improving the Session class with proper encapsulation has provided several advan
 3. **Implementation Hiding**: Internal details can be changed without affecting the external API
 4. **Better Testing**: Clear interfaces make unit testing more straightforward
 5. **Self-Documentation**: The public API clearly indicates what operations are permitted
+
+## Prompt Structure Benefits
+
+Using separate system and user prompts provides several advantages:
+
+1. **Clarity**: Clear separation between instructions (system) and content to evaluate (user)
+2. **Efficiency**: System instructions remain active without repetition, optimizing token usage
+3. **Focus**: LLM can focus on evaluation criteria without constantly parsing through code
+4. **Flexibility**: Easy to modify instruction style without changing content handling
+5. **Improved Responses**: Claude gives better responses when using dedicated system prompts
+6. **Kata-Specific Guidance**: System prompts can be tailored to specific katas while keeping the same structure

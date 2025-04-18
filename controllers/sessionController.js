@@ -1,4 +1,4 @@
-const { getPrompt } = require('../services/promptService');
+const { getPrompts } = require('../services/promptService');
 const { getLlmFeedback } = require('../services/llmService');
 const { executeCode } = require('../services/codeExecutionService');
 const Session = require('../models/Session');
@@ -108,8 +108,8 @@ exports.submitCode = async (req, res) => {
     }
   }
 
-  // Get appropriate prompt for current state
-  const prompt = getPrompt(session);
+  // Get appropriate prompts for current state
+  const prompts = getPrompts(session);
 
   try {
     let feedback;
@@ -124,7 +124,7 @@ exports.submitCode = async (req, res) => {
       };
     } else {
       // Normal flow - get LLM feedback with token tracking
-      feedback = await getLlmFeedback(prompt, session.tokenUsage);
+      feedback = await getLlmFeedback(prompts, session.tokenUsage);
     }
 
     // Always capture the last LLM interaction, regardless of capture mode
@@ -169,8 +169,8 @@ exports.getHint = async (req, res) => {
     return res.status(404).send('Session not found');
   }
 
-  // Get appropriate prompt for current state
-  const prompt = getPrompt(session);
+  // Get appropriate prompts for current state
+  const prompts = getPrompts(session);
 
   try {
     let feedback;
@@ -185,7 +185,7 @@ exports.getHint = async (req, res) => {
       };
     } else {
       // Get LLM hint with token tracking
-      feedback = await getLlmFeedback(prompt, session.tokenUsage);
+      feedback = await getLlmFeedback(prompts, session.tokenUsage);
     }
 
     // Capture this interaction as well

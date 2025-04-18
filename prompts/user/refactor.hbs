@@ -1,0 +1,42 @@
+I'm working on the {{kataName}} kata using Test-Driven Development.
+
+Current test cases:
+{{#each testCases}}
+- [{{#if (eq status "DONE")}}✓{{else if (eq status "IN_PROGRESS")}}🚧{{else}}□{{/if}}] {{description}}
+{{/each}}
+
+Currently working on test case: {{currentTest.description}}
+
+Current production code:
+```javascript
+{{productionCode}}
+```
+
+Current test code:
+```javascript
+{{testCode}}
+```
+
+{{#if hasCodeExecutionResults}}
+I executed the code and here are the results:
+
+{{#if codeExecutionResults.error}}
+Error: {{codeExecutionResults.error}}
+{{/if}}
+
+Test Results:
+{{#each codeExecutionResults.testResults}}
+- {{description}}: {{#if success}}PASS{{else}}FAIL - {{error}}{{/if}}
+{{/each}}
+
+{{#if codeExecutionResults.console}}
+Console Output:
+```
+{{codeExecutionResults.console}}
+```
+{{/if}}
+
+Overall result: {{#if codeExecutionResults.success}}PASS{{else}}FAIL{{/if}}
+{{/if}}
+
+Please evaluate my refactoring and provide feedback.
