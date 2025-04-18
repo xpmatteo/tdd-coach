@@ -20,6 +20,28 @@ Current test code:
 {{testCode}}
 ```
 
+{{#if hasCodeExecutionResults}}
+I executed the code and here are the results:
+
+{{#if codeExecutionResults.error}}
+Error: {{codeExecutionResults.error}}
+{{/if}}
+
+Test Results:
+{{#each codeExecutionResults.testResults}}
+- {{description}}: {{#if success}}PASS{{else}}FAIL - {{error}}{{/if}}
+{{/each}}
+
+{{#if codeExecutionResults.console}}
+Console Output:
+```
+{{codeExecutionResults.console}}
+```
+{{/if}}
+
+Overall result: {{#if codeExecutionResults.success}}PASS{{else}}FAIL{{/if}}
+{{/if}}
+
 Evaluate their implementation following these criteria:
 1. The implementation should make the test pass
 2. The implementation should be minimal (no overengineering)

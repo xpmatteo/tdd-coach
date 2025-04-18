@@ -40,6 +40,10 @@ exports.getPrompt = (session) => {
     currentTest = session.testCases[session.currentTestIndex];
   }
 
+  // Get code execution results if available
+  const codeExecutionResults = session.getCodeExecutionResults ? 
+    session.getCodeExecutionResults() : null;
+
   // Prepare context for template
   const context = {
     state: session.state,
@@ -48,7 +52,9 @@ exports.getPrompt = (session) => {
     testCode: session.testCode,
     testCases: session.testCases,
     currentTest,
-    selectedTestIndex: session.selectedTestIndex
+    selectedTestIndex: session.selectedTestIndex,
+    codeExecutionResults,
+    hasCodeExecutionResults: !!codeExecutionResults
   };
 
   // Apply template with context
