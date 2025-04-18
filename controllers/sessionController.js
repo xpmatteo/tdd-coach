@@ -1,5 +1,6 @@
 const { getPrompt } = require('../services/promptService');
 const { getLlmFeedback } = require('../services/llmService');
+const { executeCode } = require('../services/codeExecutionService');
 const Session = require('../models/Session');
 const testCaptureManager = require('../models/testCapture/TestCaptureManager');
 const { v4: uuidv4 } = require('uuid');
@@ -38,6 +39,9 @@ const getSessionViewData = (sessionId, session, feedback = null, proceed = null)
     proceed = lastInteraction.llmResponse.proceed;
   }
 
+  // Get code execution results if available
+  const executionResults = session.getCodeExecutionResults();
+
   return {
     sessionId,
     state: session.state,
@@ -52,7 +56,10 @@ const getSessionViewData = (sessionId, session, feedback = null, proceed = null)
     isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled(),
     isProductionCodeEditorEnabled: session.state == 'GREEN' || session.state == 'REFACTOR',
     isTestCodeEditorEnabled: session.state == 'RED' || session.state == 'REFACTOR',
-    mockModeEnabled: lastInteraction && lastInteraction.mockModeEnabled
+    mockModeEnabled: lastInteraction && lastInteraction.mockModeEnabled,
+    // Include code execution results if available
+    codeExecutionResults: executionResults,
+    hasCodeExecutionResults: !!executionResults
   };
 };
 
@@ -86,12 +93,27 @@ exports.submitCode = async (req, res) => {
     session.selectedTestIndex = selectedTestIndex;
   }
 
+  // Execute the code and store results (except in PICK state where there's no code to execute)
+  if (session.state !== 'PICK') {
+    try {
+      const executionResults = executeCode(productionCode, testCode);
+      session.setCodeExecutionResults(executionResults);
+    } catch (error) {
+      session.setCodeExecutionResults({
+        success: false,
+        error: `Error executing code: ${error.message}`,
+        testResults: [],
+        console: ''
+      });
+    }
+  }
+
   // Get appropriate prompt for current state
   const prompt = getPrompt(session);
 
   try {
     let feedback;
-    
+
     // Check if mock mode is enabled
     if (mockMode === 'on') {
       // Create a fake positive response without calling the LLM
@@ -113,6 +135,7 @@ exports.submitCode = async (req, res) => {
       testCases: session.testCases,
       selectedTestIndex: session.selectedTestIndex,
       currentTestIndex: session.currentTestIndex,
+      codeExecutionResults: session.getCodeExecutionResults(),
       llmResponse: feedback,
       mockModeEnabled: mockMode === 'on'
     };
@@ -151,7 +174,7 @@ exports.getHint = async (req, res) => {
 
   try {
     let feedback;
-    
+
     // Check if mock mode is enabled
     if (mockMode === 'on') {
       // Create a fake positive response without calling the LLM
@@ -173,6 +196,7 @@ exports.getHint = async (req, res) => {
       testCases: session.testCases,
       selectedTestIndex: session.selectedTestIndex,
       currentTestIndex: session.currentTestIndex,
+      codeExecutionResults: session.getCodeExecutionResults(),
       llmResponse: feedback,
       isHintRequest: true,
       mockModeEnabled: mockMode === 'on'
