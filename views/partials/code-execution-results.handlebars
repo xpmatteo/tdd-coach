@@ -1,0 +1,45 @@
+{{#if codeExecutionResults}}
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h3 class="h6 mb-0">Code Execution Results</h3>
+    <span class="badge {{#if codeExecutionResults.success}}bg-success{{else}}bg-danger{{/if}}">
+      {{#if codeExecutionResults.success}}All Tests Passed{{else}}Tests Failed{{/if}}
+    </span>
+  </div>
+  <div class="card-body">
+    {{#if codeExecutionResults.error}}
+      <div class="alert alert-danger">
+        <strong>Error:</strong> {{codeExecutionResults.error}}
+      </div>
+    {{/if}}
+    
+    {{#if codeExecutionResults.testResults}}
+      <div class="mb-3">
+        <h4 class="h6">Test Results</h4>
+        <ul class="list-group">
+          {{#each codeExecutionResults.testResults}}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge {{#if success}}bg-success{{else}}bg-danger{{/if}} me-2">
+                  {{#if success}}✓{{else}}✗{{/if}}
+                </span>
+                {{description}}
+              </div>
+              {{#unless success}}
+                <div class="small text-danger">{{error}}</div>
+              {{/unless}}
+            </li>
+          {{/each}}
+        </ul>
+      </div>
+    {{/if}}
+    
+    {{#if codeExecutionResults.console}}
+      <div>
+        <h4 class="h6">Console Output</h4>
+        <pre class="bg-dark text-light p-2 overflow-auto" style="max-height: 200px;">{{codeExecutionResults.console}}</pre>
+      </div>
+    {{/if}}
+  </div>
+</div>
+{{/if}}
