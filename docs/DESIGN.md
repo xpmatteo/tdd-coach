@@ -10,6 +10,7 @@ TDD Coach is an educational application designed to help users learn Test-Driven
 2. **Test Case Management**: Tracks progress through test cases for a kata
 3. **AI Coaching**: Provides contextual feedback and hints based on user's code
 4. **Code Editing**: Integrated editors for writing test and production code
+5. **Code Execution**: Runs tests in-browser to verify they pass or fail as expected
 
 ## Technology Stack
 
@@ -18,6 +19,7 @@ TDD Coach is an educational application designed to help users learn Test-Driven
 - **UI Enhancements**: HTMX for dynamic updates without a separate frontend framework
 - **Code Editors**: CodeMirror for in-browser code editing
 - **AI Integration**: Anthropic Claude API for coaching feedback
+- **Code Execution**: Server-side JavaScript execution environment for test validation
 
 ## System Architecture
 
@@ -38,13 +40,31 @@ The session tracks:
 - The currently selected test case
 - The temporarily selected test case (when in PICK state before confirmation)
 - Token usage for LLM interactions with cost estimation
+- Code execution results for validating test and implementation behavior
+
+The Session class uses proper encapsulation with private fields (using JavaScript's # syntax) and provides getters/setters for controlled access to its internal state.
 
 The PICK state implements a two-step selection process:
 1. User selects a test case (which is stored but not yet marked as IN_PROGRESS)
 2. LLM evaluates if the selection is appropriate
 3. If approved, the test case is marked as IN_PROGRESS and the state advances to RED
 
-### 2. State Pattern Implementation
+### 2. Code Execution
+
+The Code Execution service:
+- Executes user code on the server using a controlled Node.js environment
+- Provides a JavaScript testing framework with Jest-like syntax (describe/test/expect)
+- Captures test results (pass/fail status and error messages)
+- Captures console output from executed code
+- Implements security measures like timeout protection for infinite loops
+- Returns structured results that can be displayed to users and included in LLM prompts
+
+The code execution results enhance both the user and LLM feedback:
+- Users can see if their tests actually pass or fail as expected
+- The LLM receives concrete information about test execution rather than just reading the code
+- Syntax errors and runtime errors are detected and displayed
+
+### 3. State Pattern Implementation
 
 The application uses the State design pattern to manage the TDD cycle states:
 
@@ -71,7 +91,7 @@ This pattern:
 - Eliminates complex switch statements
 - Makes adding new states easier
 
-### 3. Prompt Templates
+### 4. Prompt Templates
 
 The application uses Handlebars templates to generate prompts for the LLM, with different templates for each state in the TDD cycle:
 
@@ -80,9 +100,11 @@ The application uses Handlebars templates to generate prompts for the LLM, with 
 - `green.hbs`: Evaluates if the implementation makes the test pass
 - `refactor.hbs`: Evaluates code quality improvements
 
-The "Help Me" hint feature also adopts the same color scheme as the main feedback, using matching border colors to provide a consistent visual experience.
+Each prompt template includes a section for code execution results, providing the LLM with concrete information about how the user's code actually behaves when executed.
 
-### 4. LLM Integration
+The "Help Me" hint feature adopts the same color scheme as the main feedback, using matching border colors to provide a consistent visual experience.
+
+### 5. LLM Integration
 
 The LLM service:
 - Sends formatted prompts to the Anthropic Claude API
@@ -93,11 +115,12 @@ The LLM service:
 - Supports a mock mode toggle that skips API calls and provides fake positive responses for testing and development
 - Separates test capture functionality from regular LLM interaction tracking
 
-### 5. UI Architecture
+### 6. UI Architecture
 
 The UI follows the layout specified in the requirements:
 - Top panel displays context (current state) and token usage cost (in the top right)
 - Middle panels show test cases (with scrollable overflow), production code, and test code
+- Code execution results are displayed with pass/fail indicators and error messages
 - Coach feedback section below the code editors with color-coded backgrounds:
   - Light green with black text when feedback indicates progression (proceed: "yes")
   - Light pink with black text when feedback indicates improvement needed (proceed: "no")
@@ -110,17 +133,18 @@ HTMX is used for dynamic updates without a separate frontend framework.
 ## Data Flow
 
 1. User selects a test case or submits code
-2. Server updates session state and generates appropriate LLM prompt
-3. LLM evaluates code and returns structured feedback
-4. Server processes feedback using state-specific logic and applies visual styling (green/pink) based on the "proceed" field 
-5. If feedback processing indicates success, session advances to next state
+2. When not in PICK state, the server executes the code and captures execution results
+3. Server updates session state and generates appropriate LLM prompt (including execution results)
+4. LLM evaluates code and returns structured feedback
+5. Server processes feedback using state-specific logic and applies visual styling (green/pink) based on the "proceed" field 
+6. If feedback processing indicates success, session advances to next state
 
 ## Future Enhancements
 
 1. **Multiple Katas**: Add support for additional kata exercises beyond FizzBuzz
 2. **User Accounts**: Save progress and history across sessions
 3. **Enhanced Feedback**: Additional feedback enhancements like animated transitions or success celebrations
-4. **Code Execution**: Run tests in a sandbox to verify they actually fail/pass
+4. **Full Test Runner**: Expand code execution to support more complex testing frameworks
 5. **Offline Mode**: Allow for practicing without an internet connection
 6. **Customizable Prompts**: Allow instructors to customize coaching style
 7. **Extended State Pattern**: Add more specialized states for advanced TDD workflows
@@ -137,24 +161,27 @@ HTMX is used for dynamic updates without a separate frontend framework.
 ### 2. RED State
 1. User writes a failing test for the selected test case
 2. User clicks Submit
-3. LLM evaluates if the test fails appropriately
-4. If proceed is "yes", state advances to GREEN
-5. If proceed is "no", user remains in RED state with feedback
+3. Code is executed to verify if the test actually fails
+4. LLM evaluates the code and execution results to determine if the test fails appropriately
+5. If proceed is "yes", state advances to GREEN
+6. If proceed is "no", user remains in RED state with feedback
 
 ### 3. GREEN State
 1. User writes minimal code to make the test pass
 2. User clicks Submit
-3. LLM evaluates if the implementation is correct and minimal
-4. If proceed is "yes", state advances to REFACTOR
-5. If proceed is "no", user remains in GREEN state with feedback
+3. Code is executed to verify if the test now passes
+4. LLM evaluates the code and execution results to determine if the implementation is correct and minimal
+5. If proceed is "yes", state advances to REFACTOR
+6. If proceed is "no", user remains in GREEN state with feedback
 
 ### 4. REFACTOR State
 1. User improves code quality while keeping tests passing
 2. User clicks Submit
-3. LLM evaluates if the refactoring is appropriate
-4. If proceed is "yes" and there are more tests, current test is marked DONE and state advances to PICK
-5. If proceed is "yes" and all tests are DONE, session is complete and state advances to COMPLETE
-6. If proceed is "no", user remains in REFACTOR state with feedback
+3. Code is executed to verify all tests still pass
+4. LLM evaluates the code and execution results to determine if the refactoring is appropriate
+5. If proceed is "yes" and there are more tests, current test is marked DONE and state advances to PICK
+6. If proceed is "yes" and all tests are DONE, session is complete and state advances to COMPLETE
+7. If proceed is "no", user remains in REFACTOR state with feedback
 
 ### 5. COMPLETE State
 1. Session is complete, user is shown a congratulatory message
@@ -164,26 +191,35 @@ HTMX is used for dynamic updates without a separate frontend framework.
 
 - The app currently supports only the FizzBuzz kata
 - All session data is stored in memory (not persistent)
-- The application doesn't run tests; it relies on the LLM to evaluate code
+- Code execution uses Node.js with a controlled environment and timeout protection
 - Handlebars helpers are used for conditional logic in templates
 - State pattern is used to manage the TDD cycle, making the code more maintainable
 
 ## Prompt Design Principles
 
 1. **Clarity**: Each prompt clearly indicates the current state and expectations
-2. **Context**: Full context (code, test cases, current state) is provided to the LLM
+2. **Context**: Full context (code, test cases, current state, execution results) is provided to the LLM
 3. **Structure**: Responses are structured as JSON with comments, hints, and proceed fields
 4. **Educational**: Feedback is designed to be instructive rather than just evaluative
-5. **State-Specific**: Different prompts for different states, with specialized handling (e.g., handling temporary selections in PICK state)
+5. **State-Specific**: Different prompts for different states, with specialized handling
 
-## State Pattern Benefits
+## Benefits of Code Execution
 
-Implementing the State pattern has provided several benefits:
+Adding code execution to the application provides several benefits:
 
-1. **Better code organization**: State-specific logic is now encapsulated in dedicated classes
-2. **Improved maintainability**: Adding new states or modifying existing state behavior is simpler
-3. **Enhanced readability**: The code is now more self-documenting
-4. **Reduced complexity**: The Session class is now less complex with fewer responsibilities
-5. **More flexibility**: New behaviors can be added to specific states without affecting others
-6. **Elimination of switch statements**: Removed complex conditional logic from the Session class
-7. **Explicit state transitions**: State changes are now more explicit and easier to follow
+1. **Objective Validation**: Tests are actually run to verify they fail or pass as expected
+2. **Immediate Feedback**: Users see syntax errors and test results without waiting for LLM
+3. **Enhanced LLM Context**: The LLM can give more accurate feedback based on real execution results
+4. **Learning Reinforcement**: Users better understand the TDD cycle by seeing tests actually fail then pass
+5. **Reduced LLM Hallucination**: Providing concrete execution results helps prevent the LLM from making incorrect assumptions about code behavior
+6. **Better Developer Experience**: The application now more closely resembles a real TDD workflow with immediate test feedback
+
+## Session Encapsulation Benefits
+
+Improving the Session class with proper encapsulation has provided several advantages:
+
+1. **Data Protection**: Private fields prevent unintended modification of internal state
+2. **Controlled Access**: Explicit getter/setter methods enforce validation rules
+3. **Implementation Hiding**: Internal details can be changed without affecting the external API
+4. **Better Testing**: Clear interfaces make unit testing more straightforward
+5. **Self-Documentation**: The public API clearly indicates what operations are permitted
