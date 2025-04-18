@@ -18,7 +18,7 @@ class Session {
   #currentState;
   #tokenUsage;
   #codeExecutionResults;
-  
+
   /**
    * Create a new TDD session
    * @param {Object} kata - The kata object to use
@@ -41,7 +41,7 @@ class Session {
 
     // Initialize token usage tracking
     this.#tokenUsage = new TokenUsage();
-    
+
     // Initialize with PICK state
     this.#currentState = new PickState(this);
     this.#currentState.onEnter();
@@ -54,7 +54,7 @@ class Session {
   getKataName() {
     return this.#kataName;
   }
-  
+
   /**
    * Get a copy of the test cases
    * @returns {Array} Copy of test cases
@@ -62,7 +62,7 @@ class Session {
   getTestCases() {
     return structuredClone(this.#testCases);
   }
-  
+
   /**
    * Get the production code
    * @returns {string} Production code
@@ -70,7 +70,7 @@ class Session {
   getProductionCode() {
     return this.#productionCode;
   }
-  
+
   /**
    * Set the production code
    * @param {string} code - New production code
@@ -78,7 +78,7 @@ class Session {
   setProductionCode(code) {
     this.#productionCode = code;
   }
-  
+
   /**
    * Get the test code
    * @returns {string} Test code
@@ -86,7 +86,7 @@ class Session {
   getTestCode() {
     return this.#testCode;
   }
-  
+
   /**
    * Set the test code
    * @param {string} code - New test code
@@ -94,7 +94,7 @@ class Session {
   setTestCode(code) {
     this.#testCode = code;
   }
-  
+
   /**
    * Get the current state name
    * @returns {string} Current state name
@@ -102,7 +102,7 @@ class Session {
   getState() {
     return this.#currentState.getName();
   }
-  
+
   /**
    * Get the current test index
    * @returns {number|null} Current test index
@@ -110,7 +110,7 @@ class Session {
   getCurrentTestIndex() {
     return this.#currentTestIndex;
   }
-  
+
   /**
    * Get the selected test index
    * @returns {number|null} Selected test index
@@ -118,7 +118,7 @@ class Session {
   getSelectedTestIndex() {
     return this.#selectedTestIndex;
   }
-  
+
   /**
    * Set the selected test index (temporary selection)
    * @param {number} index - Selected test index
@@ -126,7 +126,7 @@ class Session {
   selectTestIndex(index) {
     this.#selectedTestIndex = index;
   }
-  
+
   /**
    * Get the token usage tracker
    * @returns {TokenUsage} Token usage tracker
@@ -134,7 +134,7 @@ class Session {
   getTokenUsage() {
     return this.#tokenUsage;
   }
-  
+
   /**
    * Get the state description
    * @returns {string} Description of the current state
@@ -142,7 +142,7 @@ class Session {
   getStateDescription() {
     return this.#currentState.getDescription();
   }
-  
+
   /**
    * Get the code execution results
    * @returns {Object|null} Code execution results
@@ -150,7 +150,7 @@ class Session {
   getCodeExecutionResults() {
     return this.#codeExecutionResults;
   }
-  
+
   /**
    * Set the code execution results
    * @param {Object} results - Code execution results
@@ -265,20 +265,14 @@ class Session {
   processSubmission(feedback) {
     return this.#currentState.processSubmission(feedback);
   }
-  
-  /**
-   * Update a test case status
-   * @param {number} index - Index of the test case
-   * @param {string} status - New status
-   */
-  updateTestCaseStatus(index, status) {
-    if (index < 0 || index >= this.#testCases.length) {
-      throw new Error('Invalid test case index');
+
+  markCurrentTestAsDone() {
+    if (this.#currentTestIndex !== null) {
+      this.#testCases[this.currentTestIndex].status = 'DONE';
+      this.#currentTestIndex = null;
     }
-    
-    this.#testCases[index].status = status;
   }
-  
+
   /**
    * Get test case by index
    * @param {number} index - Index of the test case
@@ -288,57 +282,57 @@ class Session {
     if (index < 0 || index >= this.#testCases.length) {
       throw new Error('Invalid test case index');
     }
-    
+
     return structuredClone(this.#testCases[index]);
   }
-  
+
   // Compatibility properties for backward compatibility
   // These will ease the transition to the fully encapsulated version
-  
+
   get kataName() {
     return this.#kataName;
   }
-  
+
   get testCases() {
     return this.#testCases;
   }
-  
+
   get productionCode() {
     return this.#productionCode;
   }
-  
+
   set productionCode(code) {
     this.#productionCode = code;
   }
-  
+
   get testCode() {
     return this.#testCode;
   }
-  
+
   set testCode(code) {
     this.#testCode = code;
   }
-  
+
   get currentTestIndex() {
     return this.#currentTestIndex;
   }
-  
+
   get selectedTestIndex() {
     return this.#selectedTestIndex;
   }
-  
+
   set selectedTestIndex(index) {
     this.#selectedTestIndex = index;
   }
-  
+
   get tokenUsage() {
     return this.#tokenUsage;
   }
-  
+
   get state() {
     return this.getState();
   }
-  
+
   get currentState() {
     return this.#currentState;
   }

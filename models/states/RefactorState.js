@@ -9,21 +9,17 @@ class RefactorState extends State {
    * Get the name of the state
    * @returns {string} The state name
    */
-  getName() { 
-    return 'REFACTOR'; 
+  getName() {
+    return 'REFACTOR';
   }
-  
+
   /**
    * Get the next state in the TDD cycle
    * @returns {State} The next state object (PICK or COMPLETE)
    */
   getNextState() {
-    // Mark current test as done
-    if (this.session.currentTestIndex !== null) {
-      this.session.testCases[this.session.currentTestIndex].status = 'DONE';
-      this.session.currentTestIndex = null;
-    }
-    
+    this.session.markCurrentTestAsDone();
+
     // If there are still tests to do, go back to PICK
     if (this.session.testCases.some(test => test.status === 'TODO')) {
       const PickState = require('./PickState');
@@ -34,7 +30,7 @@ class RefactorState extends State {
       return new CompleteState(this.session);
     }
   }
-  
+
   /**
    * Get the description of the task for this state
    * @returns {string} The task description
@@ -42,7 +38,7 @@ class RefactorState extends State {
   getDescription() {
     return "Your task: remove duplication, improve names";
   }
-  
+
   /**
    * Process LLM feedback for the REFACTOR state
    * @param {Object} feedback - The feedback from the LLM
