@@ -6,16 +6,23 @@ jest.mock('@anthropic-ai/sdk', () => {
   return jest.fn().mockImplementation(() => {
     return {
       messages: {
-        create: jest.fn().mockResolvedValue({
-          content: [{ text: JSON.stringify({
-            comments: "Test comment",
-            hint: "Test hint",
-            proceed: "yes"
-          })}],
-          usage: {
-            input_tokens: 100,
-            output_tokens: 50
+        create: jest.fn().mockImplementation((options) => {
+          // Validate that system and messages are provided
+          if (!options.system || !options.messages || !options.messages.length) {
+            throw new Error('Missing required parameters');
           }
+          
+          return Promise.resolve({
+            content: [{ text: JSON.stringify({
+              comments: "Test comment",
+              hint: "Test hint",
+              proceed: "yes"
+            })}],
+            usage: {
+              input_tokens: 100,
+              output_tokens: 50
+            }
+          });
         })
       }
     };
@@ -24,14 +31,17 @@ jest.mock('@anthropic-ai/sdk', () => {
 
 describe('llmService', () => {
   let consoleLogSpy;
+  let consoleErrorSpy;
   
   beforeEach(() => {
-    // Spy on console.log to prevent test output pollution
+    // Spy on console.log and console.error to prevent test output pollution
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
   });
   
   afterEach(() => {
     consoleLogSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   test('getLlmFeedback processes system and user prompts correctly', async () => {
@@ -68,10 +78,39 @@ describe('llmService', () => {
   });
   
   test('getLlmFeedback throws error when prompts are missing', async () => {
-    // Verify
-    await expect(getLlmFeedback(null)).rejects.toThrow('Both system and user prompts are required');
-    await expect(getLlmFeedback({})).rejects.toThrow('Both system and user prompts are required');
-    await expect(getLlmFeedback({ system: "System only" })).rejects.toThrow('Both system and user prompts are required');
-    await expect(getLlmFeedback({ user: "User only" })).rejects.toThrow('Both system and user prompts are required');
+    // Using .rejects.toThrow() doesn't work well with our error handling
+    // Instead, we'll use try/catch to verify the error message
+    
+    // Test for null prompts
+    try {
+      await getLlmFeedback(null);
+      fail('Expected error was not thrown');
+    } catch (error) {
+      expect(error.message).toContain('Both system and user prompts are required');
+    }
+    
+    // Test for empty object
+    try {
+      await getLlmFeedback({});
+      fail('Expected error was not thrown');
+    } catch (error) {
+      expect(error.message).toContain('Both system and user prompts are required');
+    }
+    
+    // Test for missing user prompt
+    try {
+      await getLlmFeedback({ system: "System only" });
+      fail('Expected error was not thrown');
+    } catch (error) {
+      expect(error.message).toContain('Both system and user prompts are required');
+    }
+    
+    // Test for missing system prompt
+    try {
+      await getLlmFeedback({ user: "User only" });
+      fail('Expected error was not thrown');
+    } catch (error) {
+      expect(error.message).toContain('Both system and user prompts are required');
+    }
   });
 });
