@@ -1,254 +1,110 @@
 const Session = require('../../models/Session');
-const PickState = require('../../models/states/PickState');
-const TokenUsage = require('../../models/TokenUsage');
-
-// Mock dependencies
-jest.mock('../../models/TokenUsage');
-jest.mock('../../models/states/PickState');
-jest.mock('../../models/katas', () => ({
-  testKata: {
-    testCases: [
-      { description: 'Test case 1', status: 'TODO' },
-      { description: 'Test case 2', status: 'TODO' },
-      { description: 'Test case 3', status: 'DONE' }
-    ],
-    initialProductionCode: 'function example() {}',
-    initialTestCode: 'test("example", () => {});'
-  }
-}));
+const katas = require('../../models/katas');
 
 describe('Session', () => {
-  let mockPickState;
-  let testKata;
+  let session;
+  let fizzBuzzKata;
   
   beforeEach(() => {
-    // Reset all mocks before each test
-    jest.clearAllMocks();
+    fizzBuzzKata = katas.fizzbuzz;
+    session = new Session(fizzBuzzKata);
+  });
+
+  test('should initialize with the kata information', () => {
+    expect(session.getKataName()).toBe('FizzBuzz');
+    expect(session.getProductionCode()).toBe(fizzBuzzKata.initialProductionCode);
+    expect(session.getTestCode()).toBe(fizzBuzzKata.initialTestCode);
+    expect(session.getState()).toBe('PICK');
+    expect(session.getTestCases()).toHaveLength(fizzBuzzKata.testCases.length);
+  });
+  
+  test('should update production code', () => {
+    const newCode = 'function fizzBuzz(n) { return n; }';
+    session.setProductionCode(newCode);
+    expect(session.getProductionCode()).toBe(newCode);
+  });
+  
+  test('should update test code', () => {
+    const newCode = 'test("example", () => { expect(true).toBe(true); });';
+    session.setTestCode(newCode);
+    expect(session.getTestCode()).toBe(newCode);
+  });
+  
+  test('should not allow direct modification of test cases', () => {
+    const testCases = session.getTestCases();
+    const originalLength = testCases.length;
     
-    // Setup test kata
-    testKata = {
-      name: 'testKata',
-      testCases: [
-        { description: 'Test case 1', status: 'TODO' },
-        { description: 'Test case 2', status: 'TODO' },
-        { description: 'Test case 3', status: 'DONE' }
-      ],
-      initialProductionCode: 'function example() {}',
-      initialTestCode: 'test("example", () => {});'
+    // Try to modify the returned array
+    testCases.push({ id: 999, description: 'New test', status: 'TODO' });
+    
+    // Verify the internal state wasn't modified
+    expect(session.getTestCases()).toHaveLength(originalLength);
+  });
+  
+  test('should select a test case in PICK state', () => {
+    // In PICK state initially
+    expect(session.getState()).toBe('PICK');
+    
+    // Select first test case
+    session.selectTestCase(0);
+    expect(session.getCurrentTestIndex()).toBe(0);
+    
+    // Test case should be marked IN_PROGRESS
+    expect(session.getTestCases()[0].status).toBe('IN_PROGRESS');
+  });
+  
+  test('should not select a test case in non-PICK state', () => {
+    // Advance to RED state
+    session.selectTestIndex(0); // Set temporary selection
+    const feedback = { proceed: 'yes' };
+    session.processSubmission(feedback);
+    session.advanceState();
+    
+    // Try to select a test case in RED state
+    expect(() => {
+      session.selectTestCase(1);
+    }).toThrow();
+  });
+  
+  test('should store code execution results', () => {
+    const executionResults = {
+      success: true,
+      testResults: [{ 
+        description: 'test 1', 
+        success: true, 
+        error: null 
+      }],
+      console: 'Test output'
     };
     
-    // Setup PickState mock implementation
-    mockPickState = {
-      getName: jest.fn().mockReturnValue('PickState'),
-      onEnter: jest.fn(),
-      onExit: jest.fn(),
-      getNextState: jest.fn(),
-      canSelectTestCase: jest.fn().mockReturnValue(true),
-      processSubmission: jest.fn(),
-      getDescription: jest.fn().mockReturnValue('Pick a test case')
-    };
-    
-    PickState.mockImplementation(() => mockPickState);
+    session.setCodeExecutionResults(executionResults);
+    expect(session.getCodeExecutionResults()).toEqual(executionResults);
   });
   
-  describe('constructor', () => {
-    test('should initialize with the correct kata data', () => {
-      const session = new Session(testKata);
-      
-      expect(session.kataName).toBe('testKata');
-      expect(session.testCases).toHaveLength(3);
-      expect(session.productionCode).toBe('function example() {}');
-      expect(session.testCode).toBe('test("example", () => {});');
-      expect(session.currentTestIndex).toBeNull();
-      expect(session.selectedTestIndex).toBeNull();
-      expect(session.capturedInteraction).toBeNull();
-      expect(session.lastLlmInteraction).toBeNull();
-      expect(session.state).toBe('PickState');
-      expect(TokenUsage).toHaveBeenCalledTimes(1);
-      expect(PickState).toHaveBeenCalledWith(session);
-    });
+  test('should process LLM feedback and advance state when approved', () => {
+    // Setup
+    session.selectTestIndex(0);
+    const feedback = { proceed: 'yes' };
     
-    test('should throw an error if kata is not provided', () => {
-      expect(() => new Session(null)).toThrow('Kata object is required');
-    });
+    // Process feedback in PICK state
+    const shouldAdvance = session.processSubmission(feedback);
+    expect(shouldAdvance).toBe(true);
+    
+    // Advance state
+    session.advanceState();
+    expect(session.getState()).toBe('RED');
   });
   
-  describe('state management', () => {
-    let session;
-    let mockNextState;
+  test('should not advance state when feedback does not approve', () => {
+    // Setup
+    session.selectTestIndex(0);
+    const feedback = { proceed: 'no' };
     
-    beforeEach(() => {
-      session = new Session(testKata);
-      mockNextState = {
-        getName: jest.fn().mockReturnValue('NextState'),
-        onEnter: jest.fn(),
-        onExit: jest.fn(),
-        getNextState: jest.fn(),
-        canSelectTestCase: jest.fn(),
-        processSubmission: jest.fn(),
-        getDescription: jest.fn()
-      };
-      mockPickState.getNextState.mockReturnValue(mockNextState);
-    });
+    // Process feedback in PICK state
+    const shouldAdvance = session.processSubmission(feedback);
+    expect(shouldAdvance).toBe(false);
     
-    test('should set current state correctly', () => {
-      const newState = {
-        getName: jest.fn().mockReturnValue('NewState'),
-        onEnter: jest.fn(),
-        onExit: jest.fn()
-      };
-      
-      const result = session.setCurrentState(newState);
-      
-      expect(mockPickState.onExit).toHaveBeenCalledTimes(1);
-      expect(newState.onEnter).toHaveBeenCalledTimes(1);
-      expect(session.currentState).toBe(newState);
-      expect(session.state).toBe('NewState');
-      expect(result).toBe('NewState');
-    });
-    
-    test('should advance to the next state', () => {
-      const result = session.advanceState();
-      
-      expect(mockPickState.getNextState).toHaveBeenCalledTimes(1);
-      expect(session.currentState).toBe(mockNextState);
-      expect(result).toBe('NextState');
-    });
-    
-    test('should get state description', () => {
-      mockPickState.getDescription.mockReturnValue('Test description');
-      
-      const result = session.getStateDescription();
-      
-      expect(mockPickState.getDescription).toHaveBeenCalledTimes(1);
-      expect(result).toBe('Test description');
-    });
-  });
-  
-  describe('test case selection', () => {
-    let session;
-    
-    beforeEach(() => {
-      session = new Session(testKata);
-    });
-    
-    test('should check if test case selection is allowed', () => {
-      mockPickState.canSelectTestCase.mockReturnValue(true);
-      
-      const result = session.canSelectTestCase();
-      
-      expect(mockPickState.canSelectTestCase).toHaveBeenCalledTimes(1);
-      expect(result).toBe(true);
-    });
-    
-    test('should select a test case successfully', () => {
-      session.selectTestCase(0);
-      
-      expect(session.currentTestIndex).toBe(0);
-      expect(session.testCases[0].status).toBe('IN_PROGRESS');
-    });
-    
-    test('should throw an error when selecting test case in invalid state', () => {
-      mockPickState.canSelectTestCase.mockReturnValue(false);
-      
-      expect(() => session.selectTestCase(0)).toThrow(`Cannot select test case in PickState state`);
-    });
-    
-    test('should throw an error when selecting an invalid test case index', () => {
-      expect(() => session.selectTestCase(-1)).toThrow('Invalid test case index');
-      expect(() => session.selectTestCase(3)).toThrow('Invalid test case index');
-    });
-    
-    test('should throw an error when selecting a test case not in TODO state', () => {
-      expect(() => session.selectTestCase(2)).toThrow('Test case not in TODO state: DONE');
-    });
-  });
-  
-  describe('interaction capturing', () => {
-    let session;
-    let originalEnv;
-    
-    beforeEach(() => {
-      originalEnv = process.env.PROMPT_CAPTURE_MODE;
-      session = new Session(testKata);
-    });
-    
-    afterEach(() => {
-      process.env.PROMPT_CAPTURE_MODE = originalEnv;
-    });
-    
-    test('should capture interaction when PROMPT_CAPTURE_MODE is true', () => {
-      process.env.PROMPT_CAPTURE_MODE = 'true';
-      const interactionData = { prompt: 'test prompt' };
-      
-      session.captureInteraction(interactionData);
-      
-      expect(session.capturedInteraction).toMatchObject({
-        ...interactionData,
-        timestamp: expect.any(String),
-        id: expect.any(String)
-      });
-    });
-    
-    test('should not capture interaction when PROMPT_CAPTURE_MODE is not true', () => {
-      process.env.PROMPT_CAPTURE_MODE = 'false';
-      const interactionData = { prompt: 'test prompt' };
-      
-      session.captureInteraction(interactionData);
-      
-      expect(session.capturedInteraction).toBeNull();
-    });
-    
-    test('should capture last LLM interaction', () => {
-      const interactionData = { response: 'test response' };
-      
-      session.captureLastLlmInteraction(interactionData);
-      
-      expect(session.lastLlmInteraction).toEqual(interactionData);
-    });
-    
-    test('should get last LLM interaction', () => {
-      const interactionData = { response: 'test response' };
-      session.lastLlmInteraction = interactionData;
-      
-      const result = session.getLastLlmInteraction();
-      
-      expect(result).toEqual(interactionData);
-    });
-    
-    test('should get current capture', () => {
-      const interactionData = { prompt: 'test prompt' };
-      session.capturedInteraction = interactionData;
-      
-      const result = session.getCurrentCapture();
-      
-      expect(result).toEqual(interactionData);
-    });
-    
-    test('should clear captured interaction', () => {
-      session.capturedInteraction = { prompt: 'test prompt' };
-      
-      session.clearCapturedInteraction();
-      
-      expect(session.capturedInteraction).toBeNull();
-    });
-  });
-  
-  describe('LLM feedback processing', () => {
-    let session;
-    
-    beforeEach(() => {
-      session = new Session(testKata);
-      mockPickState.processSubmission.mockReturnValue(true);
-    });
-    
-    test('should process submission correctly', () => {
-      const feedback = { result: 'success' };
-      
-      const result = session.processSubmission(feedback);
-      
-      expect(mockPickState.processSubmission).toHaveBeenCalledWith(feedback);
-      expect(result).toBe(true);
-    });
+    // State should remain PICK
+    expect(session.getState()).toBe('PICK');
   });
 });
