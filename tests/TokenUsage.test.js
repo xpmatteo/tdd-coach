@@ -6,6 +6,29 @@ describe('TokenUsage', () => {
   beforeEach(() => {
     tokenUsage = new TokenUsage();
   });
+  
+  test('setProvider with no arguments defaults to Anthropic pricing', () => {
+    tokenUsage.setProvider();
+    expect(tokenUsage.provider).toBe('anthropic');
+    expect(tokenUsage.INPUT_COST_PER_MTOK).toBe(TokenUsage.ANTHROPIC_PRICING.INPUT_COST_PER_MTOK);
+    expect(tokenUsage.OUTPUT_COST_PER_MTOK).toBe(TokenUsage.ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK);
+  });
+  
+  test('setProvider with openrouter and Claude model uses Claude pricing', () => {
+    tokenUsage.setProvider('openrouter', 'anthropic/claude-3-7-sonnet');
+    expect(tokenUsage.provider).toBe('openrouter');
+    expect(tokenUsage.model).toBe('anthropic/claude-3-7-sonnet');
+    expect(tokenUsage.INPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_ANTHROPIC_PRICING.INPUT_COST_PER_MTOK);
+    expect(tokenUsage.OUTPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK);
+  });
+  
+  test('setProvider with openrouter and GPT-4 model uses GPT-4 pricing', () => {
+    tokenUsage.setProvider('openrouter', 'openai/gpt-4o');
+    expect(tokenUsage.provider).toBe('openrouter');
+    expect(tokenUsage.model).toBe('openai/gpt-4o');
+    expect(tokenUsage.INPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_GPT4_PRICING.INPUT_COST_PER_MTOK);
+    expect(tokenUsage.OUTPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_GPT4_PRICING.OUTPUT_COST_PER_MTOK);
+  });
 
   test('starts with zero values', () => {
     expect(tokenUsage.inputTokens).toBe(0);
@@ -25,18 +48,35 @@ describe('TokenUsage', () => {
     expect(tokenUsage.callCount).toBe(2);
   });
 
-  test('calculates estimated cost correctly', () => {
+  test('calculates estimated cost correctly for Anthropic', () => {
+    tokenUsage.setProvider('anthropic');
     tokenUsage.addUsage(1_000_000, 1_000_000);
     const cost = tokenUsage.getEstimatedCost();
     expect(cost).toBe(18); // $3 for input + $15 for output
   });
+  
+  test('calculates estimated cost correctly for OpenRouter with Anthropic models', () => {
+    tokenUsage.setProvider('openrouter', 'anthropic/claude-3-7-sonnet');
+    tokenUsage.addUsage(1_000_000, 1_000_000);
+    const cost = tokenUsage.getEstimatedCost();
+    expect(cost).toBe(18); // $3 for input + $15 for output
+  });
+  
+  test('calculates estimated cost correctly for OpenRouter with GPT-4 models', () => {
+    tokenUsage.setProvider('openrouter', 'openai/gpt-4o');
+    tokenUsage.addUsage(1_000_000, 1_000_000);
+    const cost = tokenUsage.getEstimatedCost();
+    expect(cost).toBe(40); // $10 for input + $30 for output
+  });
 
   test('formats cost correctly', () => {
+    tokenUsage.setProvider('anthropic');
     tokenUsage.addUsage(500_000, 100_000);
     expect(tokenUsage.getFormattedCost()).toBe('$3.0000');
   });
 
   test('provides detailed statistics', () => {
+    tokenUsage.setProvider('anthropic');
     tokenUsage.addUsage(100_000, 20_000);
     const stats = tokenUsage.getStats();
 

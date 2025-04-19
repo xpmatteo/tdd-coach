@@ -2,6 +2,22 @@
  * TokenUsage class for tracking LLM token usage and calculating estimated costs.
  */
 class TokenUsage {
+  // Static constants for provider pricing (per million tokens in USD)
+  static ANTHROPIC_PRICING = {
+    INPUT_COST_PER_MTOK: 3.00,
+    OUTPUT_COST_PER_MTOK: 15.00
+  };
+  
+  static OPENROUTER_ANTHROPIC_PRICING = {
+    INPUT_COST_PER_MTOK: 3.00, // Same as direct pricing for Claude
+    OUTPUT_COST_PER_MTOK: 15.00 // Same as direct pricing for Claude
+  };
+  
+  static OPENROUTER_GPT4_PRICING = {
+    INPUT_COST_PER_MTOK: 10.00,
+    OUTPUT_COST_PER_MTOK: 30.00
+  };
+  
   /**
    * Create a new TokenUsage tracker.
    */
@@ -10,9 +26,33 @@ class TokenUsage {
     this.outputTokens = 0;
     this.callCount = 0;
     
-    // Cost per million tokens (in USD)
-    this.INPUT_COST_PER_MTOK = 3.00;
-    this.OUTPUT_COST_PER_MTOK = 15.00;
+    // Set default pricing to Anthropic
+    this.setProvider();
+  }
+  
+  /**
+   * Set the provider for cost calculations
+   * @param {string} provider - The provider name (anthropic or openrouter)
+   * @param {string} model - The model name when using OpenRouter
+   */
+  setProvider(provider = 'anthropic', model = '') {
+    this.provider = provider;
+    this.model = model;
+    
+    // Default to Anthropic pricing
+    this.INPUT_COST_PER_MTOK = TokenUsage.ANTHROPIC_PRICING.INPUT_COST_PER_MTOK;
+    this.OUTPUT_COST_PER_MTOK = TokenUsage.ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK;
+    
+    // Update pricing based on provider and model
+    if (provider === 'openrouter') {
+      if (model.includes('anthropic') || model.includes('claude')) {
+        this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.INPUT_COST_PER_MTOK;
+        this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK;
+      } else if (model.includes('gpt-4')) {
+        this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_GPT4_PRICING.INPUT_COST_PER_MTOK;
+        this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_GPT4_PRICING.OUTPUT_COST_PER_MTOK;
+      }
+    }
   }
 
   /**

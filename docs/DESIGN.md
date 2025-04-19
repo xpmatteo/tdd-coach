@@ -18,7 +18,7 @@ TDD Coach is an educational application designed to help users learn Test-Driven
 - **Templating**: Handlebars for both UI and LLM prompts
 - **UI Enhancements**: HTMX for dynamic updates without a separate frontend framework
 - **Code Editors**: CodeMirror for in-browser code editing
-- **AI Integration**: Anthropic Claude API for coaching feedback
+- **AI Integration**: Anthropic Claude API or OpenRouter API for coaching feedback
 - **Code Execution**: Server-side JavaScript execution environment for test validation
 
 ## System Architecture
@@ -126,13 +126,27 @@ This separation leverages Claude's system/user message design, with system promp
 ### 5. LLM Integration
 
 The LLM service:
-- Sends formatted prompts to the Anthropic Claude API using system and user messages
+- Uses an adapter pattern to support multiple LLM providers (Anthropic Claude and OpenRouter)
+- Sends formatted prompts to the selected LLM API using system and user messages
 - Requests responses in JSON format
 - Extracts feedback comments, hints, and a binary proceed/don't proceed signal
-- Tracks token usage and calculates estimated costs based on Anthropic's pricing
+- Tracks token usage and calculates estimated costs based on the provider and model being used
 - Always stores the last LLM interaction in the session for consistent feedback rendering
 - Supports a mock mode toggle that skips API calls and provides fake positive responses for testing and development
 - Separates test capture functionality from regular LLM interaction tracking
+
+#### LLM Adapter Architecture
+
+The LLM service uses the Adapter pattern and Factory pattern to support multiple LLM providers:
+
+- **LlmAdapterFactory**: Creates the appropriate adapter based on environment configuration
+- **AnthropicAdapter**: Adapter for Anthropic Claude API
+- **OpenRouterAdapter**: Adapter for OpenRouter API (which provides access to various models including Claude, GPT-4, etc.)
+
+This design allows for:
+- Easily switching between providers using environment variables
+- Consistent interface for the rest of the application regardless of the provider being used
+- Support for additional providers in the future with minimal changes to the codebase
 
 ### 6. UI Architecture
 

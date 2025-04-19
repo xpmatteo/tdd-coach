@@ -1,11 +1,7 @@
-const Anthropic = require('@anthropic-ai/sdk');
+const LlmAdapterFactory = require('./adapters/LlmAdapterFactory');
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-const CHEAP_MODEL = 'claude-3-5-haiku-20241022';
-const BEST_MODEL = 'claude-3-7-sonnet-latest';
+// Create the appropriate adapter based on environment configuration
+const llmAdapter = LlmAdapterFactory.createAdapter();
 
 /**
  * Gets feedback from the LLM using the provided system and user prompts
@@ -26,8 +22,18 @@ exports.getLlmFeedback = async (prompts, tokenUsage) => {
     console.log('User prompt:', prompts.user);
     console.log('--------');
     
-    const response = await client.messages.create({
-      model: BEST_MODEL,
+    // Update the token usage with the current provider and model if provided
+    if (tokenUsage) {
+      const provider = process.env.LLM_PROVIDER || 'anthropic';
+      const model = provider === 'openrouter' 
+        ? (process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet')
+        : '';
+      
+      tokenUsage.setProvider(provider, model);
+    }
+    
+    // Create message using the appropriate adapter
+    const response = await llmAdapter.createMessage({
       max_tokens: 1000,
       system: prompts.system,
       messages: [
