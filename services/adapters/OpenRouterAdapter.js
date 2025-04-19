@@ -38,6 +38,11 @@ class OpenRouterAdapter {
    * @returns {Promise<Object>} - Response from OpenRouter API
    */
   async createMessage(options) {
+    // Validate that system and messages are provided
+    if (!options.system || !options.messages || !options.messages.length) {
+      throw new Error('Missing required parameters');
+    }
+    
     try {
       // OpenRouter uses the OpenAI API format
       const response = await this.client.chat.completions.create({
@@ -53,7 +58,7 @@ class OpenRouterAdapter {
       // Transform the response to match Anthropic's format
       return this.transformResponse(response);
     } catch (error) {
-      console.error('Error in OpenRouterAdapter:', error);
+      console.error('Error in OpenRouter API call:', error);
       throw new Error(`Failed to get response from OpenRouter: ${error.message}`);
     }
   }

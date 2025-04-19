@@ -112,4 +112,27 @@ describe('OpenRouterAdapter', () => {
       }
     });
   });
+  
+  test('createMessage throws error when required parameters are missing', async () => {
+    const adapter = new OpenRouterAdapter('test-key', 'test-model');
+    
+    // Mock the create method
+    adapter.client.chat.completions.create = jest.fn();
+    
+    // Test for missing messages
+    await expect(adapter.createMessage({
+      system: 'Test system prompt'
+    })).rejects.toThrow('Missing required parameters');
+    
+    // Test for missing system prompt
+    await expect(adapter.createMessage({
+      messages: [{ role: 'user', content: 'Test user prompt' }]
+    })).rejects.toThrow('Missing required parameters');
+    
+    // Test for empty messages array
+    await expect(adapter.createMessage({
+      system: 'Test system prompt',
+      messages: []
+    })).rejects.toThrow('Missing required parameters');
+  });
 });

@@ -91,6 +91,10 @@ Run tests:
 npm test
 ```
 
+### Testing
+
+For testing, a MockAdapter is automatically used instead of real API calls to Anthropic or OpenRouter. This makes it possible to run tests without providing API keys.
+
 ## Prompt Testing System
 
 The TDD Coach includes a comprehensive system for testing and improving the AI prompts. This feature helps capture real interactions, build a test suite, and analyze prompt performance over time.

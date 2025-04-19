@@ -65,7 +65,6 @@ Object.entries(predefinedSessions.sessions).forEach(([key, session]) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`TDD Coach app listening at http://localhost:${PORT}`);
-  console.log('Using Anthropic API key:', process.env.ANTHROPIC_API_KEY.substring(0, 5) + '...');
   if (process.env.PROMPT_CAPTURE_MODE === 'true') {
     console.log('🔴 Test Capture Mode ENABLED');
   }

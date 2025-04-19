@@ -1,5 +1,6 @@
 const AnthropicAdapter = require('./AnthropicAdapter');
 const OpenRouterAdapter = require('./OpenRouterAdapter');
+const MockAdapter = require('./MockAdapter');
 
 /**
  * Factory for creating LLM adapter instances based on environment configuration
@@ -7,9 +8,15 @@ const OpenRouterAdapter = require('./OpenRouterAdapter');
 class LlmAdapterFactory {
   /**
    * Create an adapter for the configured LLM provider
+   * @param {boolean} forTesting - Whether the adapter is being created for testing
    * @returns {Object} - An adapter instance for the configured provider
    */
-  static createAdapter() {
+  static createAdapter(forTesting = false) {
+    // Use MockAdapter for testing
+    if (forTesting || process.env.NODE_ENV === 'test') {
+      console.log('Using Mock Adapter for LLM services');
+      return new MockAdapter();
+    }
     const provider = process.env.LLM_PROVIDER || 'anthropic';
     
     switch (provider.toLowerCase()) {

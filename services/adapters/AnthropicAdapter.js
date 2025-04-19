@@ -32,6 +32,11 @@ class AnthropicAdapter {
    * @returns {Promise<Object>} - Response from Anthropic API
    */
   async createMessage(options) {
+    // Validate inputs
+    if (!options.system || !options.messages || !options.messages.length) {
+      throw new Error('Missing required parameters');
+    }
+    
     try {
       const response = await this.client.messages.create({
         model: this.modelName,
@@ -42,7 +47,7 @@ class AnthropicAdapter {
 
       return response;
     } catch (error) {
-      console.error('Error in AnthropicAdapter:', error);
+      console.error('Error in Anthropic API call:', error);
       throw new Error(`Failed to get response from Anthropic: ${error.message}`);
     }
   }

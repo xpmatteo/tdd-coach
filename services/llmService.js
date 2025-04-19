@@ -1,7 +1,7 @@
 const LlmAdapterFactory = require('./adapters/LlmAdapterFactory');
 
 // Create the appropriate adapter based on environment configuration
-const llmAdapter = LlmAdapterFactory.createAdapter();
+const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'test');
 
 /**
  * Gets feedback from the LLM using the provided system and user prompts
