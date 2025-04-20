@@ -125,6 +125,32 @@ exports.submitCode = async (req, res) => {
     } else {
       // Normal flow - get LLM feedback with token tracking
       feedback = await getLlmFeedback(prompts, session.tokenUsage);
+      
+      // Check if the LLM service returned an error
+      if (feedback && feedback.error) {
+        // Extract detailed error information
+        const error = feedback.error;
+        const errorDetails = error.originalError ? `${error.originalError.constructor.name}: ${error.originalError.message}` : 'Unknown error';
+        
+        // Prepare a client-friendly error response with detailed information
+        const errorResponse = {
+          error: {
+            type: error.type,
+            message: error.message,
+            details: errorDetails
+          }
+        };
+        
+        // Add additional error details based on error type
+        if (error.type === 'parse' && error.rawResponse) {
+          errorResponse.error.rawResponse = error.rawResponse;
+        }
+        if (error.type === 'api' && error.status) {
+          errorResponse.error.status = error.status;
+        }
+        
+        return res.status(500).json(errorResponse);
+      }
     }
 
     // Always capture the last LLM interaction, regardless of capture mode
@@ -157,7 +183,14 @@ exports.submitCode = async (req, res) => {
     res.render('session', viewData);
   } catch (error) {
     console.error('Error getting LLM feedback:', error);
-    res.status(500).send('Error processing your submission');
+    // Return a detailed error response
+    return res.status(500).json({
+      error: {
+        type: 'system',
+        message: 'Error processing your submission',
+        details: error.message
+      }
+    });
   }
 };
 
@@ -186,6 +219,32 @@ exports.getHint = async (req, res) => {
     } else {
       // Get LLM hint with token tracking
       feedback = await getLlmFeedback(prompts, session.tokenUsage);
+      
+      // Check if the LLM service returned an error
+      if (feedback && feedback.error) {
+        // Extract detailed error information
+        const error = feedback.error;
+        const errorDetails = error.originalError ? `${error.originalError.constructor.name}: ${error.originalError.message}` : 'Unknown error';
+        
+        // Prepare a client-friendly error response with detailed information
+        const errorResponse = {
+          error: {
+            type: error.type,
+            message: error.message,
+            details: errorDetails
+          }
+        };
+        
+        // Add additional error details based on error type
+        if (error.type === 'parse' && error.rawResponse) {
+          errorResponse.error.rawResponse = error.rawResponse;
+        }
+        if (error.type === 'api' && error.status) {
+          errorResponse.error.status = error.status;
+        }
+        
+        return res.status(500).json(errorResponse);
+      }
     }
 
     // Capture this interaction as well
@@ -211,7 +270,14 @@ exports.getHint = async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting hint:', error);
-    res.status(500).send('Error getting hint');
+    // Return a detailed error response
+    return res.status(500).json({
+      error: {
+        type: 'system',
+        message: 'Error getting hint',
+        details: error.message
+      }
+    });
   }
 };
 

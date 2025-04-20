@@ -1,0 +1,165 @@
+<!-- Toast container for displaying notifications -->
+<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+  <!-- Toasts will be dynamically added here via JavaScript -->
+</div>
+
+<!-- Template for creating error toasts -->
+<template id="error-toast-template">
+  <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="8000">
+    <div class="toast-header bg-danger text-white">
+      <strong class="me-auto toast-title">Error</strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      <div class="toast-message"></div>
+      <div class="collapse mt-2" id="error-details-collapse">
+        <div class="card card-body small toast-details text-muted"></div>
+      </div>
+      <button class="btn btn-link btn-sm text-decoration-none p-0 mt-1 toggle-details" type="button">
+        Show details
+      </button>
+    </div>
+  </div>
+</template>
+
+<!-- Scripts for handling toast notifications -->
+<script>
+  /**
+   * Creates and shows a toast notification
+   * @param {Object} options - Toast options
+   * @param {string} options.title - Title of the toast
+   * @param {string} options.message - Main message to display
+   * @param {string} [options.details] - Detailed error information (optional)
+   * @param {string} [options.type='error'] - Type of toast (error, warning, info)
+   */
+  function showToast(options = {}) {
+    // Get the template
+    const template = document.getElementById('error-toast-template');
+    if (!template) return;
+    
+    // Clone the template
+    const toast = template.content.cloneNode(true).querySelector('.toast');
+    
+    // Set toast content
+    const title = toast.querySelector('.toast-title');
+    const message = toast.querySelector('.toast-message');
+    const details = toast.querySelector('.toast-details');
+    const detailsButton = toast.querySelector('.toggle-details');
+    const detailsCollapse = toast.querySelector('.collapse');
+    
+    // Set unique ID for the collapse
+    const collapseId = 'details-' + Date.now();
+    detailsCollapse.id = collapseId;
+    
+    // Set content
+    title.textContent = options.title || 'Error';
+    message.textContent = options.message || 'An error occurred';
+    
+    // Handle details
+    if (options.details) {
+      details.textContent = options.details;
+      detailsButton.setAttribute('data-bs-toggle', 'collapse');
+      detailsButton.setAttribute('data-bs-target', '#' + collapseId);
+      
+      // Toggle button text
+      detailsButton.addEventListener('click', function() {
+        const isExpanded = detailsCollapse.classList.contains('show');
+        this.textContent = isExpanded ? 'Show details' : 'Hide details';
+      });
+    } else {
+      // No details, hide the details section
+      detailsButton.style.display = 'none';
+    }
+    
+    // Set toast type styling
+    const header = toast.querySelector('.toast-header');
+    if (options.type === 'warning') {
+      header.classList.replace('bg-danger', 'bg-warning');
+      header.classList.replace('text-white', 'text-dark');
+      toast.querySelector('.btn-close').classList.remove('btn-close-white');
+    } else if (options.type === 'info') {
+      header.classList.replace('bg-danger', 'bg-info');
+    }
+    
+    // Add to container
+    const container = document.getElementById('toast-container');
+    container.appendChild(toast);
+    
+    // Initialize and show the toast
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove from DOM when hidden
+    toast.addEventListener('hidden.bs.toast', function() {
+      this.remove();
+    });
+    
+    return toast;
+  }
+
+  /**
+   * Shows an error toast with information from an API error response
+   * @param {Object} errorData - Error data from API response
+   */
+  function showErrorToast(errorData) {
+    if (!errorData || !errorData.error) return;
+    
+    const error = errorData.error;
+    let title, message, details;
+    
+    // Set title based on error type
+    switch (error.type) {
+      case 'network':
+        title = 'Network Error';
+        break;
+      case 'api':
+        title = 'API Error';
+        if (error.status) {
+          title += ` (${error.status})`;
+        }
+        break;
+      case 'parse':
+        title = 'Response Parsing Error';
+        break;
+      default:
+        title = 'System Error';
+    }
+    
+    // Set message and details
+    message = error.message || 'An error occurred during LLM communication';
+    details = error.details || '';
+    
+    // For parse errors, show the raw response
+    if (error.type === 'parse' && error.rawResponse) {
+      details += '\n\nRaw Response:\n' + error.rawResponse;
+    }
+    
+    showToast({
+      title,
+      message,
+      details,
+      type: 'error'
+    });
+  }
+  
+  // Handle HTMX response errors for Submit and Help requests
+  document.addEventListener('htmx:responseError', function(event) {
+    try {
+      const xhr = event.detail.xhr;
+      if (xhr.status === 500) {
+        const response = JSON.parse(xhr.responseText);
+        if (response.error) {
+          showErrorToast(response);
+          event.preventDefault(); // Prevent HTMX from updating the content
+        }
+      }
+    } catch (e) {
+      // Fallback error if response is not JSON
+      showToast({
+        title: 'Error',
+        message: 'Failed to process server response',
+        details: event.detail.xhr.responseText
+      });
+    }
+  });
+</script>
