@@ -21,7 +21,7 @@ class OpenRouterAdapter {
     }
 
     this.modelName = modelName;
-    
+
     // Initialize OpenAI client with OpenRouter base URL
     this.client = new OpenAI({
       baseURL: 'https://openrouter.ai/api/v1',
@@ -42,7 +42,7 @@ class OpenRouterAdapter {
     if (!options.system || !options.messages || !options.messages.length) {
       throw new Error('Missing required parameters');
     }
-    
+
     try {
       // OpenRouter uses the OpenAI API format with some extensions
       const response = await this.client.chat.completions.create({
@@ -73,7 +73,7 @@ class OpenRouterAdapter {
   transformResponse(response) {
     // Extract the message content
     const messageContent = response.choices[0].message.content;
-    
+    console.log("Used model:", this.model);
     // Extract usage data
     const usage = response.usage || {
       prompt_tokens: 0,
