@@ -25,6 +25,7 @@ class TokenUsage {
     this.inputTokens = 0;
     this.outputTokens = 0;
     this.callCount = 0;
+    this.actualCost = 0;
     
     // Set default pricing to Anthropic
     this.setProvider();
@@ -59,14 +60,27 @@ class TokenUsage {
    * Add token usage from an LLM interaction.
    * @param {number} inputTokens - Number of input tokens used
    * @param {number} outputTokens - Number of output tokens used
+   * @param {number} [cost] - Actual cost reported by the API (primarily for OpenRouter)
+   * @returns {TokenUsage} - Returns this for method chaining
    */
-  addUsage(inputTokens, outputTokens) {
+  addUsage(inputTokens, outputTokens, cost) {
     if (typeof inputTokens !== 'number' || typeof outputTokens !== 'number') {
       throw new Error('Input and output tokens must be numbers');
     }
     
     if (inputTokens < 0 || outputTokens < 0) {
       throw new Error('Token counts cannot be negative');
+    }
+    
+    // Validate cost if provided
+    if (cost !== undefined && cost !== null) {
+      if (typeof cost !== 'number') {
+        throw new Error('Cost must be a number if provided');
+      }
+      if (cost < 0) {
+        throw new Error('Cost cannot be negative');
+      }
+      this.actualCost += cost;
     }
     
     this.inputTokens += inputTokens;
@@ -81,6 +95,12 @@ class TokenUsage {
    * @returns {number} Estimated cost in USD
    */
   getEstimatedCost() {
+    // If we have actual cost data from the API, use that instead of calculating
+    if (this.actualCost > 0) {
+      return this.actualCost;
+    }
+    
+    // Otherwise calculate based on token counts and rates
     const inputCost = (this.inputTokens / 1_000_000) * this.INPUT_COST_PER_MTOK;
     const outputCost = (this.outputTokens / 1_000_000) * this.OUTPUT_COST_PER_MTOK;
     
@@ -101,6 +121,10 @@ class TokenUsage {
    * @returns {Object} Object containing usage statistics
    */
   getStats() {
+    const inputCost = (this.inputTokens / 1_000_000) * this.INPUT_COST_PER_MTOK;
+    const outputCost = (this.outputTokens / 1_000_000) * this.OUTPUT_COST_PER_MTOK;
+    const usingActualCost = this.actualCost > 0;
+    
     return {
       inputTokens: this.inputTokens,
       outputTokens: this.outputTokens,
@@ -108,18 +132,21 @@ class TokenUsage {
       callCount: this.callCount,
       estimatedCost: this.getEstimatedCost(),
       formattedCost: this.getFormattedCost(),
-      inputCost: (this.inputTokens / 1_000_000) * this.INPUT_COST_PER_MTOK,
-      outputCost: (this.outputTokens / 1_000_000) * this.OUTPUT_COST_PER_MTOK
+      inputCost: inputCost,
+      outputCost: outputCost,
+      usingActualCost: usingActualCost
     };
   }
 
   /**
    * Reset usage statistics.
+   * @returns {TokenUsage} - Returns this for method chaining
    */
   reset() {
     this.inputTokens = 0;
     this.outputTokens = 0;
     this.callCount = 0;
+    this.actualCost = 0;
     return this;
   }
 }

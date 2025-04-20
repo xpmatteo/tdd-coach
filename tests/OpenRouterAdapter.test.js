@@ -59,13 +59,15 @@ describe('OpenRouterAdapter', () => {
     });
     
     // Check that the create method was called with the correct parameters
+    // Updated to include usage.include=true
     expect(createMock).toHaveBeenCalledWith({
       model: 'test-model',
       max_tokens: 500,
       messages: [
         { role: 'system', content: 'System prompt' },
         { role: 'user', content: 'User prompt' }
-      ]
+      ],
+      usage: { include: true }
     });
   });
 
@@ -75,19 +77,21 @@ describe('OpenRouterAdapter', () => {
     const openRouterResponse = {
       id: 'test-id',
       choices: [{ message: { content: '{"comments":"Test comment","hint":"Test hint","proceed":"yes"}' } }],
-      usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 }
+      usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
+      cost: 0.00123
     };
     
     const transformedResponse = adapter.transformResponse(openRouterResponse);
     
-    // Check that the response is transformed to Anthropic format
+    // Check that the response is transformed to Anthropic format with cost
     expect(transformedResponse).toEqual({
       id: 'test-id',
       content: [{ text: '{"comments":"Test comment","hint":"Test hint","proceed":"yes"}', type: 'text' }],
       usage: {
         input_tokens: 100,
         output_tokens: 50,
-        total_tokens: 150
+        total_tokens: 150,
+        cost: 0.00123
       }
     });
   });
@@ -102,13 +106,15 @@ describe('OpenRouterAdapter', () => {
     });
     
     // Check the response is in Anthropic format
+    // Updated to include cost field (defaults to 0 if not provided)
     expect(response).toEqual({
       id: 'test-id',
       content: [{ text: '{"comments":"Test comment","hint":"Test hint","proceed":"yes"}', type: 'text' }],
       usage: {
         input_tokens: 100,
         output_tokens: 50,
-        total_tokens: 150
+        total_tokens: 150,
+        cost: 0 // Now expected to be included
       }
     });
   });
@@ -134,5 +140,20 @@ describe('OpenRouterAdapter', () => {
       system: 'Test system prompt',
       messages: []
     })).rejects.toThrow('Missing required parameters');
+  });
+
+  test('transformResponse handles missing cost', () => {
+    const adapter = new OpenRouterAdapter('test-key', 'test-model');
+    
+    const openRouterResponse = {
+      id: 'test-id',
+      choices: [{ message: { content: 'Test content' } }],
+      usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 }
+      // No cost field
+    };
+    
+    const result = adapter.transformResponse(openRouterResponse);
+    
+    expect(result.usage.cost).toBe(0); // Should default to 0
   });
 });

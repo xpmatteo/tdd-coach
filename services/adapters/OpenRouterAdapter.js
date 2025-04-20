@@ -44,7 +44,7 @@ class OpenRouterAdapter {
     }
     
     try {
-      // OpenRouter uses the OpenAI API format
+      // OpenRouter uses the OpenAI API format with some extensions
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         max_tokens: options.max_tokens,
@@ -53,6 +53,8 @@ class OpenRouterAdapter {
           { role: 'system', content: options.system },
           ...options.messages
         ],
+        // Request usage details including cost
+        usage: { include: true }
       });
 
       // Transform the response to match Anthropic's format
@@ -79,14 +81,19 @@ class OpenRouterAdapter {
       total_tokens: 0
     };
 
+    // Extract cost if available
+    const cost = response.cost || 0;
+
     // Return a response format compatible with Anthropic's API
+    // but extended with cost information
     return {
       id: response.id,
       content: [{ text: messageContent, type: 'text' }],
       usage: {
         input_tokens: usage.prompt_tokens,
         output_tokens: usage.completion_tokens,
-        total_tokens: usage.total_tokens
+        total_tokens: usage.total_tokens,
+        cost: cost
       }
     };
   }

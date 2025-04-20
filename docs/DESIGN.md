@@ -148,6 +148,20 @@ This design allows for:
 - Consistent interface for the rest of the application regardless of the provider being used
 - Support for additional providers in the future with minimal changes to the codebase
 
+#### Cost Tracking
+
+Token usage and cost tracking is handled in two ways:
+
+- **Anthropic API**: For direct Anthropic API calls, cost is estimated based on token usage and known pricing rates
+- **OpenRouter API**: For OpenRouter API calls, we now use actual cost data returned by the API:
+  - The OpenRouterAdapter adds `usage: { include: true }` to API requests
+  - Actual cost information is extracted from the API response
+  - TokenUsage class has been enhanced to accept and track actual cost data
+  - When actual cost data is available, it takes precedence over estimated calculations
+  - The UI displays the actual cost from the API rather than relying on estimates
+
+This provides more accurate cost tracking for OpenRouter without requiring additional API calls.
+
 ### 6. UI Architecture
 
 The UI follows the layout specified in the requirements:

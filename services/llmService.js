@@ -47,11 +47,22 @@ exports.getLlmFeedback = async (prompts, tokenUsage) => {
 
     // Track token usage if a tracker was provided
     if (tokenUsage) {
+      // For OpenRouter, also pass the actual cost if available
+      const actualCost = response.usage && response.usage.cost;
+      
       tokenUsage.addUsage(
         response.usage.input_tokens,
-        response.usage.output_tokens
+        response.usage.output_tokens,
+        actualCost
       );
+      
       console.log(`Token usage: ${response.usage.input_tokens} input, ${response.usage.output_tokens} output`);
+      
+      // Log the actual cost if it came from the API
+      if (actualCost) {
+        console.log(`Actual cost from API: $${actualCost.toFixed(5)}`);
+      }
+      
       console.log(`Estimated cost so far: ${tokenUsage.getFormattedCost()}`);
     }
 
