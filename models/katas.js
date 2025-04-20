@@ -27,7 +27,7 @@ module.exports = {
       },
       {
         id: 3,
-        description: 'multiple of 3: 3 should return "Fizz',
+        description: 'multiple of 3: 3 should return "Fizz"',
         status: 'TODO'
       },
       {
