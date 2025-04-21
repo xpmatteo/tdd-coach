@@ -105,7 +105,7 @@
     if (!errorData || !errorData.error) return;
     
     const error = errorData.error;
-    let title, message, details;
+    let title, message, detailsString;
     
     // Set title based on error type
     switch (error.type) {
@@ -127,17 +127,33 @@
     
     // Set message and details
     message = error.message || 'An error occurred during LLM communication';
-    details = error.details || '';
     
-    // For parse errors, show the raw response
-    if (error.type === 'parse' && error.rawResponse) {
-      details += '\n\nRaw Response:\n' + error.rawResponse;
+    // Format the nested details object into a string
+    detailsString = 'No specific details provided.';
+    if (error.details && typeof error.details === 'object') {
+      const specificError = error.details;
+      detailsString = `Type: ${specificError.type || 'N/A'}\n`;
+      detailsString += `Message: ${specificError.message || 'N/A'}\n`;
+      // Check if nested details is a non-empty string before adding
+      if (specificError.details && typeof specificError.details === 'string' && specificError.details.trim() !== '') {
+        detailsString += `Details: ${specificError.details}\n`;
+      }
+      if (specificError.status) {
+        detailsString += `Status: ${specificError.status}\n`;
+      }
+      if (specificError.rawResponse) {
+        detailsString += `Raw Response: ${specificError.rawResponse}`;
+      }
+      detailsString = detailsString.trim(); // Remove trailing newline if any
+    } else if (typeof error.details === 'string' && error.details.trim() !== '') {
+      // Handle case where details might be a simple string
+      detailsString = error.details;
     }
     
     showToast({
       title,
       message,
-      details,
+      details: detailsString,
       type: 'error'
     });
   }
