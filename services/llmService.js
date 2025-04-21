@@ -28,12 +28,9 @@ exports.getLlmFeedback = async (prompts, tokenUsage) => {
 
     // Update the token usage with the current provider and model if provided
     if (tokenUsage) {
-      const provider = process.env.LLM_PROVIDER || 'anthropic';
-      const model = provider === 'openrouter'
-        ? (process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet')
-        : '';
-
-      tokenUsage.setProvider(provider, model);
+      // Now that we only support OpenRouter, directly use its details
+      const model = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet'; // Default model if not set
+      tokenUsage.setProvider('openrouter', model);
     }
 
     // Create message using the appropriate adapter

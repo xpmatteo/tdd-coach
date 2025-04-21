@@ -18,7 +18,7 @@ TDD Coach is an educational application designed to help users learn Test-Driven
 - **Templating**: Handlebars for both UI and LLM prompts
 - **UI Enhancements**: HTMX for dynamic updates without a separate frontend framework
 - **Code Editors**: CodeMirror for in-browser code editing
-- **AI Integration**: Anthropic Claude API or OpenRouter API for coaching feedback
+- **AI Integration**: OpenRouter API for coaching feedback (supports various models like Claude, GPT, etc.)
 - **Code Execution**: Server-side JavaScript execution environment for test validation
 
 ## System Architecture
@@ -126,8 +126,8 @@ This separation leverages Claude's system/user message design, with system promp
 ### 5. LLM Integration
 
 The LLM service:
-- Uses an adapter pattern to support multiple LLM providers (Anthropic Claude and OpenRouter)
-- Sends formatted prompts to the selected LLM API using system and user messages
+- Uses the OpenRouter adapter to support various LLM models available through their platform
+- Sends formatted prompts to the OpenRouter API using system and user messages
 - Requests responses in JSON format, attempts to parse it, and returns the structured data (comments, hint, proceed).
 - Throws specific, typed errors (network, api, parse) if communication with the LLM fails or the response cannot be parsed. The 'parse' error includes the raw response text.
 - Tracks token usage (updating *before* attempting to parse the response) and calculates estimated costs based on the provider and model.
@@ -139,28 +139,27 @@ The LLM service:
 
 The LLM service uses the Adapter pattern and Factory pattern to support multiple LLM providers:
 
-- **LlmAdapterFactory**: Creates the appropriate adapter based on environment configuration
-- **AnthropicAdapter**: Adapter for Anthropic Claude API
-- **OpenRouterAdapter**: Adapter for OpenRouter API (which provides access to various models including Claude, GPT-4, etc.)
+- **LlmAdapterFactory**: Creates the appropriate adapter based on environment configuration (primarily OpenRouter or MockAdapter for testing)
+- **OpenRouterAdapter**: Adapter for OpenRouter API
+- **MockAdapter**: Used during testing to simulate API calls.
 
 This design allows for:
-- Easily switching between providers using environment variables
+- Access to a wide range of models via OpenRouter
 - Consistent interface for the rest of the application regardless of the provider being used
-- Support for additional providers in the future with minimal changes to the codebase
+- Support for additional providers in the future with minimal changes to the codebase (though currently focused on OpenRouter)
 
 #### Cost Tracking
 
-Token usage and cost tracking is handled in two ways:
+Token usage and cost tracking is handled via OpenRouter:
 
-- **Anthropic API**: For direct Anthropic API calls, cost is estimated based on token usage and known pricing rates
-- **OpenRouter API**: For OpenRouter API calls, we now use actual cost data returned by the API:
+- **OpenRouter API**: The application uses the actual cost data returned by the OpenRouter API:
   - The OpenRouterAdapter adds `usage: { include: true }` to API requests
   - Actual cost information is extracted from the API response
   - TokenUsage class has been enhanced to accept and track actual cost data
-  - When actual cost data is available, it takes precedence over estimated calculations
+  - When actual cost data is available, it takes precedence over estimated calculations based on token counts and generic rates.
   - The UI displays the actual cost from the API rather than relying on estimates
 
-This provides more accurate cost tracking for OpenRouter without requiring additional API calls.
+This provides accurate cost tracking without requiring additional API calls specifically for cost retrieval.
 
 ### 6. UI Architecture
 

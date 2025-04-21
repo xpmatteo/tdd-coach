@@ -27,13 +27,9 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
 3. Create a `.env` file based on `.env.example` and add your API key(s):
    ```
    # API Configurations
-   ANTHROPIC_API_KEY=your_anthropic_api_key_here
    OPENROUTER_API_KEY=your_openrouter_api_key_here
 
-   # LLM Provider Selection - Options: "anthropic" or "openrouter"
-   LLM_PROVIDER=anthropic
-
-   # OpenRouter Model Selection (only used when LLM_PROVIDER=openrouter)
+   # OpenRouter Model Selection
    # Examples: "anthropic/claude-3-7-sonnet", "openai/gpt-4o", etc.
    OPENROUTER_MODEL=anthropic/claude-3-7-sonnet
 
@@ -72,7 +68,7 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
 - HTMX for dynamic UI interactions without a separate frontend framework
 - Handlebars for view and prompt templating
 - CodeMirror for code editing
-- AI coaching with either Anthropic Claude or any model available through OpenRouter
+- AI coaching with any model available through OpenRouter
 
 ## Project Structure
 

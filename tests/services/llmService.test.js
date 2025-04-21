@@ -1,33 +1,8 @@
 const { getLlmFeedback } = require('../../services/llmService');
 const TokenUsage = require('../../models/TokenUsage');
 
-// Mock the Anthropic client
-jest.mock('@anthropic-ai/sdk', () => {
-  return jest.fn().mockImplementation(() => {
-    return {
-      messages: {
-        create: jest.fn().mockImplementation((options) => {
-          // Validate that system and messages are provided
-          if (!options.system || !options.messages || !options.messages.length) {
-            throw new Error('Missing required parameters');
-          }
-          
-          return Promise.resolve({
-            content: [{ text: JSON.stringify({
-              comments: "Test comment",
-              hint: "Test hint",
-              proceed: "yes"
-            })}],
-            usage: {
-              input_tokens: 100,
-              output_tokens: 50
-            }
-          });
-        })
-      }
-    };
-  });
-});
+// Note: No need to mock specific SDKs anymore.
+// The LlmAdapterFactory automatically returns MockAdapter in test environment.
 
 describe('llmService', () => {
   let consoleLogSpy;
@@ -68,13 +43,17 @@ describe('llmService', () => {
       user: "Here is the code to review"
     };
     const tokenUsage = new TokenUsage();
+    const setProviderSpy = jest.spyOn(tokenUsage, 'setProvider');
     
     // Execute
     await getLlmFeedback(prompts, tokenUsage);
     
     // Verify
+    // Check that setProvider was called correctly (assuming OpenRouter)
+    expect(setProviderSpy).toHaveBeenCalledWith('openrouter', process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet');
     expect(tokenUsage.inputTokens).toBe(100);
     expect(tokenUsage.outputTokens).toBe(50);
+    setProviderSpy.mockRestore(); // Clean up spy
   });
   
   test('getLlmFeedback throws error when prompts are missing', async () => {

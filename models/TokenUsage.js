@@ -3,11 +3,6 @@
  */
 class TokenUsage {
   // Static constants for provider pricing (per million tokens in USD)
-  static ANTHROPIC_PRICING = {
-    INPUT_COST_PER_MTOK: 3.00,
-    OUTPUT_COST_PER_MTOK: 15.00
-  };
-  
   static OPENROUTER_ANTHROPIC_PRICING = {
     INPUT_COST_PER_MTOK: 3.00, // Same as direct pricing for Claude
     OUTPUT_COST_PER_MTOK: 15.00 // Same as direct pricing for Claude
@@ -27,8 +22,7 @@ class TokenUsage {
     this.callCount = 0;
     this.actualCost = 0;
     
-    // Set default pricing to Anthropic
-    this.setProvider();
+    this.setProvider('openrouter', process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet'); // Default to OpenRouter
   }
   
   /**
@@ -37,22 +31,25 @@ class TokenUsage {
    * @param {string} model - The model name when using OpenRouter
    */
   setProvider(provider = 'anthropic', model = '') {
+    // Ensure provider is always OpenRouter
+    provider = 'openrouter';
+
     this.provider = provider;
     this.model = model;
-    
-    // Default to Anthropic pricing
-    this.INPUT_COST_PER_MTOK = TokenUsage.ANTHROPIC_PRICING.INPUT_COST_PER_MTOK;
-    this.OUTPUT_COST_PER_MTOK = TokenUsage.ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK;
-    
-    // Update pricing based on provider and model
-    if (provider === 'openrouter') {
-      if (model.includes('anthropic') || model.includes('claude')) {
-        this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.INPUT_COST_PER_MTOK;
-        this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK;
-      } else if (model.includes('gpt-4')) {
-        this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_GPT4_PRICING.INPUT_COST_PER_MTOK;
-        this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_GPT4_PRICING.OUTPUT_COST_PER_MTOK;
-      }
+
+    // Update pricing based on the OpenRouter model
+    if (model.includes('anthropic') || model.includes('claude')) {
+      this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.INPUT_COST_PER_MTOK;
+      this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK;
+    } else if (model.includes('gpt-4')) {
+      this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_GPT4_PRICING.INPUT_COST_PER_MTOK;
+      this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_GPT4_PRICING.OUTPUT_COST_PER_MTOK;
+    } else {
+      // Fallback or default pricing if model is unknown or different
+      // For now, let's default to Claude pricing if model not recognized
+      console.warn(`Unknown OpenRouter model: ${model}. Using Claude pricing as default.`);
+      this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.INPUT_COST_PER_MTOK;
+      this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK;
     }
   }
 

@@ -1,4 +1,3 @@
-const AnthropicAdapter = require('./AnthropicAdapter');
 const OpenRouterAdapter = require('./OpenRouterAdapter');
 const MockAdapter = require('./MockAdapter');
 
@@ -17,36 +16,19 @@ class LlmAdapterFactory {
       console.log('Using Mock Adapter for LLM services');
       return new MockAdapter();
     }
-    const provider = process.env.LLM_PROVIDER || 'anthropic';
-    
-    switch (provider.toLowerCase()) {
-      case 'anthropic':
-        console.log('Using Anthropic API for LLM services');
-        return new AnthropicAdapter(
-          process.env.ANTHROPIC_API_KEY,
-          process.env.ANTHROPIC_MODEL || 'claude-3-7-sonnet-latest'
-        );
-        
-      case 'openrouter':
-        console.log('Using OpenRouter API for LLM services');
-        if (!process.env.OPENROUTER_API_KEY) {
-          throw new Error('OPENROUTER_API_KEY environment variable is required when using OpenRouter');
-        }
-        if (!process.env.OPENROUTER_MODEL) {
-          throw new Error('OPENROUTER_MODEL environment variable is required when using OpenRouter');
-        }
-        return new OpenRouterAdapter(
-          process.env.OPENROUTER_API_KEY,
-          process.env.OPENROUTER_MODEL
-        );
-        
-      default:
-        console.warn(`Unknown LLM provider: ${provider}. Falling back to Anthropic.`);
-        return new AnthropicAdapter(
-          process.env.ANTHROPIC_API_KEY,
-          process.env.ANTHROPIC_MODEL || 'claude-3-7-sonnet-latest'
-        );
+
+    // Always use OpenRouter for non-testing environments
+    console.log('Using OpenRouter API for LLM services');
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error('OPENROUTER_API_KEY environment variable is required');
     }
+    if (!process.env.OPENROUTER_MODEL) {
+      throw new Error('OPENROUTER_MODEL environment variable is required');
+    }
+    return new OpenRouterAdapter(
+      process.env.OPENROUTER_API_KEY,
+      process.env.OPENROUTER_MODEL
+    );
   }
 }
 
