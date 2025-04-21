@@ -1,5 +1,6 @@
 const Session = require('../../models/Session');
 const katas = require('../../models/katas');
+const RunningCost = require('../../models/RunningCost');
 
 describe('Session', () => {
   let session;
@@ -16,6 +17,8 @@ describe('Session', () => {
     expect(session.getTestCode()).toBe(fizzBuzzKata.initialTestCode);
     expect(session.getState()).toBe('PICK');
     expect(session.getTestCases()).toHaveLength(fizzBuzzKata.testCases.length);
+    expect(session.getRunningCost()).toBeInstanceOf(RunningCost);
+    expect(session.runningCost).toBeInstanceOf(RunningCost);
   });
   
   test('should update production code', () => {

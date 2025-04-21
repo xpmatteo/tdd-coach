@@ -1,5 +1,5 @@
 const { getLlmFeedback } = require('../../services/llmService');
-const TokenUsage = require('../../models/TokenUsage');
+const RunningCost = require('../../models/RunningCost');
 
 // Mock the llmService itself for these error tests
 jest.mock('../../services/llmService');
@@ -11,7 +11,7 @@ describe('LLM Service Error Handling', () => {
   let consoleLogSpy;
   let consoleErrorSpy;
   let prompts;
-  let tokenUsage;
+  let runningCost;
 
   beforeEach(() => {
     // Spy on console methods
@@ -26,7 +26,7 @@ describe('LLM Service Error Handling', () => {
       system: "You are a TDD coach",
       user: "Here is the code to review"
     };
-    tokenUsage = new TokenUsage();
+    runningCost = new RunningCost();
   });
   
   afterEach(() => {
@@ -44,12 +44,12 @@ describe('LLM Service Error Handling', () => {
     getLlmFeedback.mockImplementation(async () => { throw networkError; });
 
     // Call the service
-    await expect(getLlmFeedback(prompts, tokenUsage))
+    await expect(getLlmFeedback(prompts, runningCost))
       .rejects.toThrow('Network connection failed');
     
     // Verify the thrown error has the correct type
     try {
-      await getLlmFeedback(prompts, tokenUsage);
+      await getLlmFeedback(prompts, runningCost);
     } catch (error) {
       expect(error.type).toBe('network');
     }
@@ -64,12 +64,12 @@ describe('LLM Service Error Handling', () => {
     getLlmFeedback.mockImplementation(async () => { throw apiError; });
 
     // Call the service
-    await expect(getLlmFeedback(prompts, tokenUsage))
+    await expect(getLlmFeedback(prompts, runningCost))
       .rejects.toThrow('429 Too Many Requests');
     
     // Verify the thrown error has the correct properties
     try {
-      await getLlmFeedback(prompts, tokenUsage);
+      await getLlmFeedback(prompts, runningCost);
     } catch (error) {
       expect(error.type).toBe('api');
       expect(error.status).toBe(429);
@@ -82,19 +82,19 @@ describe('LLM Service Error Handling', () => {
     parseError.type = 'parse';
     parseError.rawResponse = 'This is not valid JSON';
     parseError.originalError = new SyntaxError('Unexpected token');
-    getLlmFeedback.mockImplementation(async (prompts, usageTracker) => {
+    getLlmFeedback.mockImplementation(async (prompts, costTracker) => {
       // Simulate token usage update *before* throwing parse error
-      if (usageTracker) { usageTracker.addUsage(100, 50); }
+      if (costTracker) { costTracker.addCost(0.123); }
       throw parseError;
     });
 
     // Call the service
-    await expect(getLlmFeedback(prompts, tokenUsage))
+    await expect(getLlmFeedback(prompts, runningCost))
       .rejects.toThrow(/Failed to parse LLM response as JSON:/);
     
     // Verify the thrown error has the correct properties
     try {
-      await getLlmFeedback(prompts, tokenUsage);
+      await getLlmFeedback(prompts, runningCost);
     } catch (error) {
       expect(error.type).toBe('parse');
       expect(error.rawResponse).toBe('This is not valid JSON');
@@ -108,20 +108,20 @@ describe('LLM Service Error Handling', () => {
     parseErrorForTokenTest.type = 'parse';
     parseErrorForTokenTest.rawResponse = 'Invalid JSON data';
     parseErrorForTokenTest.originalError = new SyntaxError('Something went wrong');
-    getLlmFeedback.mockImplementation(async (prompts, usageTracker) => {
+    getLlmFeedback.mockImplementation(async (prompts, costTracker) => {
       // Simulate token usage update *before* throwing parse error
-      if (usageTracker) {
-        usageTracker.addUsage(100, 50);
+      if (costTracker) {
+        costTracker.addCost(0.456);
       }
       throw parseErrorForTokenTest;
     });
 
     // Call the service
-    await expect(getLlmFeedback(prompts, tokenUsage))
+    await expect(getLlmFeedback(prompts, runningCost))
       .rejects.toThrow(/Failed to parse LLM response as JSON: Something went wrong/);
     
-    // Verify token usage was still updated
-    expect(tokenUsage.inputTokens).toBe(100);
-    expect(tokenUsage.outputTokens).toBe(50);
+    // Verify cost was still updated
+    expect(runningCost.actualCost).toBe(0.456);
+    expect(runningCost.callCount).toBe(1);
   });
 });

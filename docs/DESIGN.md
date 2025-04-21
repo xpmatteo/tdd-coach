@@ -39,7 +39,7 @@ The session tracks:
 - Production and test code
 - The currently selected test case
 - The temporarily selected test case (when in PICK state before confirmation)
-- Token usage for LLM interactions with cost estimation
+- Running cost tracking for LLM interactions
 - Code execution results for validating test and implementation behavior
 
 The Session class uses proper encapsulation with private fields (using JavaScript's # syntax) and provides getters/setters for controlled access to its internal state.
@@ -130,7 +130,7 @@ The LLM service:
 - Sends formatted prompts to the OpenRouter API using system and user messages
 - Requests responses in JSON format, attempts to parse it, and returns the structured data (comments, hint, proceed).
 - Throws specific, typed errors (network, api, parse) if communication with the LLM fails or the response cannot be parsed. The 'parse' error includes the raw response text.
-- Tracks token usage (updating *before* attempting to parse the response) and calculates estimated costs based on the provider and model.
+- Tracks cumulative cost based on data returned directly from the OpenRouter API.
 - Always stores the last LLM interaction in the session for consistent feedback rendering
 - Supports a mock mode toggle (handled in the controller) that skips API calls.
 - Separates test capture functionality.
@@ -150,12 +150,12 @@ This design allows for:
 
 #### Cost Tracking
 
-Token usage and cost tracking is handled via OpenRouter:
+Cost tracking is handled via OpenRouter:
 
 - **OpenRouter API**: The application uses the actual cost data returned by the OpenRouter API:
   - The OpenRouterAdapter adds `usage: { include: true }` to API requests
   - Actual cost information is extracted from the API response
-  - TokenUsage class has been enhanced to accept and track actual cost data
+  - RunningCost class accepts and tracks this actual cost data
   - The application now relies *solely* on this actual cost data for tracking.
   - The UI displays the actual cost from the API rather than relying on estimates
 
@@ -164,7 +164,7 @@ This provides accurate cost tracking without requiring additional API calls spec
 ### 6. UI Architecture
 
 The UI follows the layout specified in the requirements:
-- Top panel displays context (current state) and token usage cost (in the top right)
+- Top panel displays context (current state) and cumulative API cost (in the top right)
 - Middle panels show test cases (with scrollable overflow), production code, and test code
 - Code execution results are displayed with pass/fail indicators and error messages
 - Coach feedback section below the code editors with color-coded backgrounds:
@@ -184,7 +184,7 @@ HTMX is used for dynamic updates without a separate frontend framework.
 4. The `sessionController` calls the `llmService` to get feedback.
 5. The `llmService` communicates with the LLM API via an adapter.
    - **Success Path:**
-     - The service receives the response, updates token usage, parses the JSON, and returns the structured feedback (comments, hint, proceed).
+     - The service receives the response, updates the running cost, parses the JSON, and returns the structured feedback (comments, hint, proceed).
      - The controller processes the feedback, updates the session state (potentially advancing it), and re-renders the UI with the feedback.
    - **Error Path:**
      - If the `llmService` encounters an error (network, API, or parsing), it throws a typed error.

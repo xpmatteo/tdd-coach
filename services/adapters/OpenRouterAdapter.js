@@ -82,7 +82,7 @@ class OpenRouterAdapter {
     };
 
     // Extract cost if available
-    const cost = response.cost || 0;
+    const cost = response.usage.cost || 0;
 
     // Return a response format compatible with Anthropic's API
     // but extended with cost information

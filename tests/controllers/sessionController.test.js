@@ -51,8 +51,8 @@ describe('sessionController', () => {
       captureLastLlmInteraction: jest.fn(),
       captureInteraction: jest.fn(),
       getStateDescription: jest.fn().mockReturnValue('Write a failing test'),
-      tokenUsage: {
-        getStats: jest.fn().mockReturnValue({ inputTokens: 0, outputTokens: 0, cost: 0 })
+      runningCost: {
+        getStats: jest.fn().mockReturnValue({ totalCost: 0, formattedCost: '$0.0000' })
       }
     };
     
@@ -91,7 +91,7 @@ describe('sessionController', () => {
     expect(getPrompts).toHaveBeenCalledWith(mockSession);
     expect(getLlmFeedback).toHaveBeenCalledWith(
       { system: 'You are a TDD coach', user: 'Here is the code to review' },
-      mockSession.tokenUsage
+      mockSession.runningCost
     );
   });
 });

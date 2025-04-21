@@ -1,4 +1,5 @@
 const LlmAdapterFactory = require('./adapters/LlmAdapterFactory');
+const RunningCost = require('../models/RunningCost');
 
 // Create the appropriate adapter based on environment configuration
 const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'test');
@@ -8,11 +9,11 @@ const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'tes
  * @param {Object} prompts - Object with system and user prompts
  * @param {string} prompts.system - System prompt with instructions for the LLM
  * @param {string} prompts.user - User prompt with content to evaluate
- * @param {TokenUsage} [tokenUsage] - Optional TokenUsage tracker to update with usage data
+ * @param {RunningCost} [runningCost] - Optional RunningCost tracker to update with usage data
  * @returns {Object} - Parsed JSON response with comments, hint, and proceed field
  * @throws {Error} Throws various errors if LLM communication or parsing fails
  */
-exports.getLlmFeedback = async (prompts, tokenUsage) => {
+exports.getLlmFeedback = async (prompts, runningCost) => {
   let response; // Define response here to access it in outer scope if needed
 
   try {
@@ -27,10 +28,10 @@ exports.getLlmFeedback = async (prompts, tokenUsage) => {
     console.log('--------');
 
     // Update the token usage with the current provider and model if provided
-    if (tokenUsage) {
+    if (runningCost) {
       // Now that we only support OpenRouter, directly use its details
       const model = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet'; // Default model if not set
-      tokenUsage.setProvider('openrouter', model);
+      runningCost.setProvider('openrouter', model);
     }
 
     // Create message using the appropriate adapter
@@ -48,18 +49,15 @@ exports.getLlmFeedback = async (prompts, tokenUsage) => {
     console.log('--------');
 
     // Track token usage if a tracker was provided. Do this BEFORE parsing.
-    if (tokenUsage && response.usage) {
+    if (runningCost && response.usage) {
       const actualCost = response.usage && response.usage.cost;
-      tokenUsage.addUsage(
-        response.usage.input_tokens,
-        response.usage.output_tokens,
-        actualCost
-      );
+      runningCost.addCost(actualCost);
+      // Log token usage for debugging purposes, even if not tracked for cost
       console.log(`Token usage: ${response.usage.input_tokens} input, ${response.usage.output_tokens} output`);
       if (actualCost) {
         console.log(`Actual cost from API: $${actualCost.toFixed(5)}`);
       }
-      console.log(`Estimated cost so far: ${tokenUsage.getFormattedCost()}`);
+      console.log(`Total cost so far: ${runningCost.getFormattedCost()}`);
     }
 
     // Parse the JSON response in a separate try/catch

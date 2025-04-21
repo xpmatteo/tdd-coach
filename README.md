@@ -57,7 +57,7 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
 - Progress tracking for test cases
 - Two-step test selection process (select → confirm)
 - Dedicated coach feedback area with color-coded progress status (green for proceed, red for needs improvement)
-- Token usage tracking and accurate cost estimation for LLM interactions (displays in the UI)
+- Accurate API cost tracking for LLM interactions using data from OpenRouter (displays in the UI)
 - Persistent LLM feedback that's always preserved between page reloads
 - Development mode toggle to skip LLM API calls and use fake positive responses
 - Prompt Testing System for capturing, managing, and analyzing test cases for LLM prompts

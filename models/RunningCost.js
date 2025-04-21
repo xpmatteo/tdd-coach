@@ -1,13 +1,11 @@
 /**
- * TokenUsage class for tracking LLM token usage and calculating estimated costs.
+ * RunningCost class for tracking cumulative LLM API cost.
  */
-class TokenUsage {
+class RunningCost {
   /**
-   * Create a new TokenUsage tracker.
+   * Create a new RunningCost tracker.
    */
   constructor() {
-    this.inputTokens = 0;
-    this.outputTokens = 0;
     this.callCount = 0;
     this.actualCost = 0;
     this.provider = 'openrouter'; // Provider is always openrouter now
@@ -20,27 +18,17 @@ class TokenUsage {
    * @param {string} model - The model name when using OpenRouter
    */
   setProvider(_provider = 'openrouter', model = '') {
-    this.provider = 'openrouter'; // Always openrouter
+    this.provider = 'openrouter'; // Keep track of provider (always openrouter)
     this.model = model;
     // No pricing logic needed here anymore
   }
 
   /**
-   * Add token usage from an LLM interaction.
-   * @param {number} inputTokens - Number of input tokens used
-   * @param {number} outputTokens - Number of output tokens used
+   * Add cost from an LLM interaction.
    * @param {number} [cost] - Actual cost reported by the API (primarily for OpenRouter)
-   * @returns {TokenUsage} - Returns this for method chaining
+   * @returns {RunningCost} - Returns this for method chaining
    */
-  addUsage(inputTokens, outputTokens, cost) {
-    if (typeof inputTokens !== 'number' || typeof outputTokens !== 'number') {
-      throw new Error('Input and output tokens must be numbers');
-    }
-    
-    if (inputTokens < 0 || outputTokens < 0) {
-      throw new Error('Token counts cannot be negative');
-    }
-    
+  addCost(cost) {
     // Validate cost if provided
     if (cost !== undefined && cost !== null) {
       if (typeof cost !== 'number') {
@@ -52,8 +40,6 @@ class TokenUsage {
       this.actualCost += cost;
     }
     
-    this.inputTokens += inputTokens;
-    this.outputTokens += outputTokens;
     this.callCount += 1;
     
     return this;
@@ -83,9 +69,6 @@ class TokenUsage {
    */
   getStats() {
     return {
-      inputTokens: this.inputTokens,
-      outputTokens: this.outputTokens,
-      totalTokens: this.inputTokens + this.outputTokens,
       callCount: this.callCount,
       totalCost: this.getTotalCost(),
       formattedCost: this.getFormattedCost(),
@@ -94,15 +77,13 @@ class TokenUsage {
 
   /**
    * Reset usage statistics.
-   * @returns {TokenUsage} - Returns this for method chaining
+   * @returns {RunningCost} - Returns this for method chaining
    */
   reset() {
-    this.inputTokens = 0;
-    this.outputTokens = 0;
     this.callCount = 0;
     this.actualCost = 0;
     return this;
   }
 }
 
-module.exports = TokenUsage;
+module.exports = RunningCost;

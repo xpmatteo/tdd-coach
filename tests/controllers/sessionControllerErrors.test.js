@@ -1,7 +1,7 @@
 const { submitCode, getHint, sessions } = require('../../controllers/sessionController');
 const { getLlmFeedback } = require('../../services/llmService');
 const Session = require('../../models/Session');
-const TokenUsage = require('../../models/TokenUsage');
+const RunningCost = require('../../models/RunningCost');
 
 // Mock the llmService
 jest.mock('../../services/llmService', () => ({
@@ -44,7 +44,7 @@ describe('Session Controller Error Handling', () => {
       testCases: [{ description: 'Test 1', status: 'IN_PROGRESS' }],
       selectedTestIndex: null,
       currentTestIndex: 0,
-      tokenUsage: new TokenUsage(),
+      runningCost: new RunningCost(),
       setCodeExecutionResults: jest.fn(),
       getCodeExecutionResults: jest.fn().mockReturnValue(null),
       captureLastLlmInteraction: jest.fn(),

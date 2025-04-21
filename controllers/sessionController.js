@@ -52,7 +52,7 @@ const getSessionViewData = (sessionId, session, feedback = null, proceed = null)
     feedback: feedback || session.feedback || "Welcome to the FizzBuzz kata! Let's get started with TDD.",
     selectedTestIndex: session.selectedTestIndex,
     proceed: proceed,
-    tokenUsage: session.tokenUsage.getStats(),
+    runningCost: session.runningCost.getStats(),
     isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled(),
     isProductionCodeEditorEnabled: session.state == 'GREEN' || session.state == 'REFACTOR',
     isTestCodeEditorEnabled: session.state == 'RED' || session.state == 'REFACTOR',
@@ -159,7 +159,7 @@ exports.submitCode = async (req, res) => {
   // Normal Mode: Call LLM and handle potential errors
   try {
     // Get LLM feedback with token tracking
-    const feedback = await getLlmFeedback(prompts, session.tokenUsage);
+    const feedback = await getLlmFeedback(prompts, session.runningCost);
     
     // Always capture the last LLM interaction, regardless of capture mode
     const interactionData = {
@@ -244,7 +244,7 @@ exports.getHint = async (req, res) => {
 
   try {
     // Get LLM feedback, but we only care about the hint
-    const feedback = await getLlmFeedback(prompts, session.tokenUsage);
+    const feedback = await getLlmFeedback(prompts, session.runningCost);
     
     // Return only the hint
     return res.json({ hint: feedback.hint });

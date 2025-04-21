@@ -5,7 +5,7 @@ const katas = require('../models/katas');
  */
 const RedState = require('./states/RedState');
 const Session = require('./Session');
-const TokenUsage = require('./TokenUsage');
+const RunningCost = require('./RunningCost');
 
 /**
  * Create a predefined FizzBuzz session halfway through the kata
@@ -62,8 +62,8 @@ function createFizzBuzzHalfwaySession() {
   // Set the current state to RED
   session.setCurrentState(new RedState(session));
 
-  // Reset token usage
-  session.tokenUsage = new TokenUsage();
+  // Reset running cost
+  session.runningCost = new RunningCost();
 
   return session;
 }

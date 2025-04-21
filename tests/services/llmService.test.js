@@ -1,5 +1,5 @@
 const { getLlmFeedback } = require('../../services/llmService');
-const TokenUsage = require('../../models/TokenUsage');
+const RunningCost = require('../../models/RunningCost');
 
 // Note: No need to mock specific SDKs anymore.
 // The LlmAdapterFactory automatically returns MockAdapter in test environment.
@@ -25,10 +25,10 @@ describe('llmService', () => {
       system: "You are a TDD coach",
       user: "Here is the code to review"
     };
-    const tokenUsage = new TokenUsage();
+    const runningCost = new RunningCost();
     
     // Execute
-    const result = await getLlmFeedback(prompts, tokenUsage);
+    const result = await getLlmFeedback(prompts, runningCost);
     
     // Verify
     expect(result).toHaveProperty('comments', 'Test comment');
@@ -42,18 +42,22 @@ describe('llmService', () => {
       system: "You are a TDD coach",
       user: "Here is the code to review"
     };
-    const tokenUsage = new TokenUsage();
-    const setProviderSpy = jest.spyOn(tokenUsage, 'setProvider');
+    const runningCost = new RunningCost();
+    const setProviderSpy = jest.spyOn(runningCost, 'setProvider');
+    const addCostSpy = jest.spyOn(runningCost, 'addCost');
     
     // Execute
-    await getLlmFeedback(prompts, tokenUsage);
+    await getLlmFeedback(prompts, runningCost);
     
     // Verify
     // Check that setProvider was called correctly (assuming OpenRouter)
     expect(setProviderSpy).toHaveBeenCalledWith('openrouter', process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet');
-    expect(tokenUsage.inputTokens).toBe(100);
-    expect(tokenUsage.outputTokens).toBe(50);
+    // Check that addCost was called with the cost from the mock adapter response (which is undefined in MockAdapter)
+    expect(addCostSpy).toHaveBeenCalledWith(undefined); // MockAdapter doesn't provide cost
+    expect(runningCost.actualCost).toBe(0); // Cost should remain 0 as MockAdapter doesn't provide it
+    expect(runningCost.callCount).toBe(1); // Should still increment call count
     setProviderSpy.mockRestore(); // Clean up spy
+    addCostSpy.mockRestore(); // Clean up spy
   });
   
   test('getLlmFeedback throws error when prompts are missing', async () => {

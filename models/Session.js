@@ -1,6 +1,6 @@
 const katas = require('./katas');
 const PickState = require('./states/PickState');
-const TokenUsage = require('./TokenUsage');
+const RunningCost = require('./RunningCost');
 
 /**
  * Represents a TDD session with improved encapsulation
@@ -16,7 +16,7 @@ class Session {
   #capturedInteraction;
   #lastLlmInteraction;
   #currentState;
-  #tokenUsage;
+  #runningCost;
   #codeExecutionResults;
 
   /**
@@ -39,8 +39,8 @@ class Session {
     this.#lastLlmInteraction = null;
     this.#codeExecutionResults = null;
 
-    // Initialize token usage tracking
-    this.#tokenUsage = new TokenUsage();
+    // Initialize cost tracking
+    this.#runningCost = new RunningCost();
 
     // Initialize with PICK state
     this.#currentState = new PickState(this);
@@ -128,11 +128,11 @@ class Session {
   }
 
   /**
-   * Get the token usage tracker
-   * @returns {TokenUsage} Token usage tracker
+   * Get the running cost tracker
+   * @returns {RunningCost} Running cost tracker
    */
-  getTokenUsage() {
-    return this.#tokenUsage;
+  getRunningCost() {
+    return this.#runningCost;
   }
 
   /**
@@ -325,8 +325,8 @@ class Session {
     this.#selectedTestIndex = index;
   }
 
-  get tokenUsage() {
-    return this.#tokenUsage;
+  get runningCost() {
+    return this.#runningCost;
   }
 
   get state() {
