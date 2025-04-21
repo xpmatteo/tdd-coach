@@ -18,7 +18,8 @@ jest.mock('openai', () => {
             usage: {
               prompt_tokens: 100,
               completion_tokens: 50,
-              total_tokens: 150
+              total_tokens: 150,
+              cost: 0.00123
             }
           })
         }
@@ -77,8 +78,7 @@ describe('OpenRouterAdapter', () => {
     const openRouterResponse = {
       id: 'test-id',
       choices: [{ message: { content: '{"comments":"Test comment","hint":"Test hint","proceed":"yes"}' } }],
-      usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
-      cost: 0.00123
+      usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150, cost: 0.00123 }
     };
     
     const transformedResponse = adapter.transformResponse(openRouterResponse);
@@ -114,7 +114,7 @@ describe('OpenRouterAdapter', () => {
         input_tokens: 100,
         output_tokens: 50,
         total_tokens: 150,
-        cost: 0 // Now expected to be included
+        cost: 0.00123
       }
     });
   });

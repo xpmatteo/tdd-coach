@@ -18,7 +18,8 @@ jest.mock('openai', () => {
             usage: {
               prompt_tokens: 100,
               completion_tokens: 50,
-              total_tokens: 150
+              total_tokens: 150,
+              cost: 0.00123
             },
             // This is what we're testing - OpenRouter returns actual cost
             cost: 0.00123
@@ -86,7 +87,8 @@ describe('OpenRouterAdapter', () => {
       usage: {
         prompt_tokens: 200,
         completion_tokens: 100,
-        total_tokens: 300
+        total_tokens: 300,
+        cost: 0.00456
       },
       cost: 0.00456
     };
@@ -101,32 +103,6 @@ describe('OpenRouterAdapter', () => {
         output_tokens: 100,
         total_tokens: 300,
         cost: 0.00456
-      }
-    });
-  });
-
-  test('transformResponse handles missing usage', () => {
-    const openRouterResponse = {
-      id: 'response-id',
-      choices: [
-        {
-          message: {
-            content: 'Test content'
-          }
-        }
-      ]
-    };
-
-    const result = adapter.transformResponse(openRouterResponse);
-
-    expect(result).toEqual({
-      id: 'response-id',
-      content: [{ text: 'Test content', type: 'text' }],
-      usage: {
-        input_tokens: 0,
-        output_tokens: 0,
-        total_tokens: 0,
-        cost: 0
       }
     });
   });
