@@ -1,8 +1,8 @@
 const LlmAdapterFactory = require('./adapters/LlmAdapterFactory');
 const RunningCost = require('../models/RunningCost');
 
-// Create the appropriate adapter based on environment configuration
-const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'test');
+// Remove adapter creation from module scope
+// const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'test');
 
 /**
  * Gets feedback from the LLM using the provided system and user prompts
@@ -14,6 +14,9 @@ const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'tes
  * @throws {Error} Throws various errors if LLM communication or parsing fails
  */
 exports.getLlmFeedback = async (prompts, runningCost) => {
+  // Get the adapter inside the function call to ensure mocks are applied
+  const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'test');
+
   let response; // Define response here to access it in outer scope if needed
 
   try {
@@ -61,8 +64,20 @@ exports.getLlmFeedback = async (prompts, runningCost) => {
     }
 
     // Parse the JSON response in a separate try/catch
+    let cleanedText; // Declare outside the try block
     try {
-      const feedback = JSON.parse(response.content[0].text);
+      let rawText = response.content[0].text;
+      cleanedText = rawText.trim(); // Assign value here
+
+      // Check for markdown code fences and remove them
+      if (cleanedText.startsWith('```json') && cleanedText.endsWith('```')) {
+        cleanedText = cleanedText.substring(7, cleanedText.length - 3).trim();
+      } else if (cleanedText.startsWith('```') && cleanedText.endsWith('```')) {
+        // Handle case without the 'json' language identifier
+        cleanedText = cleanedText.substring(3, cleanedText.length - 3).trim();
+      }
+
+      const feedback = JSON.parse(cleanedText);
       // Ensure required fields exist
       return {
         comments: feedback.comments || 'No comments provided',
@@ -73,7 +88,9 @@ exports.getLlmFeedback = async (prompts, runningCost) => {
       // Throw a specific error for parsing issues
       const error = new Error(`Failed to parse LLM response as JSON: ${parseError.message}`);
       error.type = 'parse'; // Add type for easier identification
-      error.rawResponse = response.content[0].text; // Attach raw response
+      // Include both raw and cleaned text for debugging
+      error.rawResponse = response.content[0].text;
+      error.cleanedResponse = cleanedText; // Now accessible
       error.originalError = parseError;
       throw error;
     }
