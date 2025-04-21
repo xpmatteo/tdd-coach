@@ -1,8 +1,19 @@
-const LlmAdapterFactory = require('./adapters/LlmAdapterFactory');
 const RunningCost = require('../models/RunningCost');
 
-// Remove adapter creation from module scope
-// const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'test');
+// Module-level variable to hold the injected adapter
+let configuredAdapter = null;
+
+/**
+ * Initializes the llmService with a specific LLM adapter.
+ * This must be called before getLlmFeedback is used.
+ * @param {object} adapter - An LLM adapter instance (e.g., OpenRouterAdapter)
+ */
+exports.init = (adapter) => {
+  if (!adapter || typeof adapter.createMessage !== 'function') {
+    throw new Error('Invalid LLM adapter provided to llmService.init');
+  }
+  configuredAdapter = adapter;
+};
 
 /**
  * Gets feedback from the LLM using the provided system and user prompts
@@ -14,8 +25,14 @@ const RunningCost = require('../models/RunningCost');
  * @throws {Error} Throws various errors if LLM communication or parsing fails
  */
 exports.getLlmFeedback = async (prompts, runningCost) => {
+  // Ensure the service has been initialized
+  if (!configuredAdapter) {
+    throw new Error('llmService has not been initialized. Call llmService.init(adapter) first.');
+  }
+
   // Get the adapter inside the function call to ensure mocks are applied
-  const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'test');
+  // const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'test'); // Remove this line
+  const llmAdapter = configuredAdapter; // Use the configured adapter
 
   let response; // Define response here to access it in outer scope if needed
 

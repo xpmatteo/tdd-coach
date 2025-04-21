@@ -1,13 +1,13 @@
 const RunningCost = require('../../models/RunningCost');
+// Use llmService directly, which now includes the init function
+const llmService = require('../../services/llmService');
 
-// Mock the factory *before* requiring the service
-jest.mock('../../services/adapters/LlmAdapterFactory');
-
-const LlmAdapterFactory = require('../../services/adapters/LlmAdapterFactory');
-const { getLlmFeedback } = require('../../services/llmService'); // Require service after mocking factory
-
-// Mock function for the adapter's method
+// Mock function for the adapter's createMessage method
 const mockCreateMessage = jest.fn();
+// Create a reusable mock adapter object
+const mockAdapter = {
+  createMessage: mockCreateMessage
+};
 
 // Original llmService tests (should ideally use the default mock adapter)
 // describe('llmService', () => {
@@ -92,11 +92,9 @@ describe('llmService - JSON Parsing and Markdown Stripping', () => {
   const prompts = { system: 'sys', user: 'usr' };
 
   beforeEach(() => {
-    // Configure the factory mock to return our specific mock function
-    // This ensures llmService gets our mock when createAdapter is called
-    LlmAdapterFactory.createAdapter.mockReturnValue({
-        createMessage: mockCreateMessage
-    });
+    // Initialize the llmService with our mock adapter before each test
+    llmService.init(mockAdapter);
+
     // Reset the mock function's call history etc.
     mockCreateMessage.mockClear();
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
@@ -112,52 +110,52 @@ describe('llmService - JSON Parsing and Markdown Stripping', () => {
   const validFeedbackJson = JSON.stringify(validFeedback);
 
   test('should parse valid JSON without markdown fences', async () => {
-    // Configure the mock response *for this specific test*
+    // Configure the mock adapter's response *for this specific test*
     mockCreateMessage.mockResolvedValue({
       content: [{ text: validFeedbackJson, type: 'text' }],
       usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 }
     });
 
-    const result = await getLlmFeedback(prompts);
+    const result = await llmService.getLlmFeedback(prompts);
     expect(result).toEqual(validFeedback);
     expect(mockCreateMessage).toHaveBeenCalledTimes(1);
   });
 
   test('should parse valid JSON wrapped in ```json fences', async () => {
     const rawResponse = "```json\n" + validFeedbackJson + "\n```";
-    // Configure the mock response *for this specific test*
+    // Configure the mock adapter's response *for this specific test*
     mockCreateMessage.mockResolvedValue({
       content: [{ text: rawResponse, type: 'text' }],
       usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 }
     });
 
-    const result = await getLlmFeedback(prompts);
+    const result = await llmService.getLlmFeedback(prompts);
     expect(result).toEqual(validFeedback);
     expect(mockCreateMessage).toHaveBeenCalledTimes(1);
   });
 
   test('should parse valid JSON wrapped in ``` fences (no language)', async () => {
     const rawResponse = "```\n" + validFeedbackJson + "\n```";
-    // Configure the mock response *for this specific test*
+    // Configure the mock adapter's response *for this specific test*
     mockCreateMessage.mockResolvedValue({
       content: [{ text: rawResponse, type: 'text' }],
       usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 }
     });
 
-    const result = await getLlmFeedback(prompts);
+    const result = await llmService.getLlmFeedback(prompts);
     expect(result).toEqual(validFeedback);
     expect(mockCreateMessage).toHaveBeenCalledTimes(1);
   });
 
   test('should handle extra whitespace around fences and JSON', async () => {
       const rawResponse = "  ```json  \n  " + validFeedbackJson + "  \n  ```  ";
-      // Configure the mock response *for this specific test*
+      // Configure the mock adapter's response *for this specific test*
       mockCreateMessage.mockResolvedValue({
         content: [{ text: rawResponse, type: 'text' }],
         usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 }
       });
 
-      const result = await getLlmFeedback(prompts);
+      const result = await llmService.getLlmFeedback(prompts);
       expect(result).toEqual(validFeedback);
       expect(mockCreateMessage).toHaveBeenCalledTimes(1);
   });
@@ -171,9 +169,9 @@ describe('llmService - JSON Parsing and Markdown Stripping', () => {
       usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 }
     });
 
-    await expect(getLlmFeedback(prompts)).rejects.toThrow(/^Failed to parse LLM response as JSON:/);
+    await expect(llmService.getLlmFeedback(prompts)).rejects.toThrow(/^Failed to parse LLM response as JSON:/);
     try {
-      await getLlmFeedback(prompts);
+      await llmService.getLlmFeedback(prompts);
     } catch (error) {
       expect(error.type).toBe('parse');
       expect(error.rawResponse).toBe(rawResponse);
@@ -187,15 +185,15 @@ describe('llmService - JSON Parsing and Markdown Stripping', () => {
       const invalidJson = '{"invalid": true,'; // Incomplete JSON
       const rawResponse = invalidJson;
       const cleanedResponse = invalidJson;
-      // Configure the mock response *for this specific test*
+      // Configure the mock adapter's response *for this specific test*
       mockCreateMessage.mockResolvedValue({
         content: [{ text: rawResponse, type: 'text' }],
         usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 }
       });
 
-      await expect(getLlmFeedback(prompts)).rejects.toThrow(/^Failed to parse LLM response as JSON:/);
+      await expect(llmService.getLlmFeedback(prompts)).rejects.toThrow(/^Failed to parse LLM response as JSON:/);
        try {
-        await getLlmFeedback(prompts);
+        await llmService.getLlmFeedback(prompts);
       } catch (error) {
         expect(error.type).toBe('parse');
         expect(error.rawResponse).toBe(rawResponse);
@@ -209,15 +207,15 @@ describe('llmService - JSON Parsing and Markdown Stripping', () => {
       const plainText = 'This is not JSON.';
       const rawResponse = plainText;
       const cleanedResponse = plainText;
-      // Configure the mock response *for this specific test*
+      // Configure the mock adapter's response *for this specific test*
       mockCreateMessage.mockResolvedValue({
         content: [{ text: rawResponse, type: 'text' }],
         usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 }
       });
 
-      await expect(getLlmFeedback(prompts)).rejects.toThrow(/^Failed to parse LLM response as JSON:/);
+      await expect(llmService.getLlmFeedback(prompts)).rejects.toThrow(/^Failed to parse LLM response as JSON:/);
        try {
-        await getLlmFeedback(prompts);
+        await llmService.getLlmFeedback(prompts);
       } catch (error) {
         expect(error.type).toBe('parse');
         expect(error.rawResponse).toBe(rawResponse);

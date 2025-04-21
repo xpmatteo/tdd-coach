@@ -1,11 +1,5 @@
 require('dotenv').config();
 
-// Check for required environment variables
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('Error: ANTHROPIC_API_KEY environment variable is not defined');
-  console.error('Please create a .env file based on .env.example and add your API key');
-  process.exit(1);
-}
 const express = require('express');
 const { engine } = require('express-handlebars');
 const handlebarsHelpers = require('./helpers/handlebars-helpers');
@@ -15,8 +9,18 @@ const path = require('path');
 const sessionController = require('./controllers/sessionController');
 const testCaptureController = require('./controllers/testCaptureController');
 
+const llmService = require('./services/llmService');
+const OpenRouterAdapter = require('./services/adapters/OpenRouterAdapter');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Check for required environment variables
+if (!process.env.OPENROUTER_API_KEY) {
+  console.error('Error: OPENROUTER_API_KEY environment variable is not defined');
+  console.error('Please create a .env file based on .env.example and add your OpenRouter API key');
+  process.exit(1);
+}
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -61,6 +65,14 @@ const predefinedSessions = require('./models/predefinedSessions');
 Object.entries(predefinedSessions.sessions).forEach(([key, session]) => {
   sessionController.sessions.set(key, session);
 });
+
+// --- LLM Adapter Initialization ---
+const llmAdapter = new OpenRouterAdapter(
+  process.env.OPENROUTER_API_KEY,
+  process.env.OPENROUTER_MODEL || 'anthropic/claude-3-haiku-20240307' // Default model
+);
+llmService.init(llmAdapter);
+// --- End LLM Adapter Initialization ---
 
 // Start server
 app.listen(PORT, () => {
