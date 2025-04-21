@@ -78,39 +78,20 @@ describe('llmService', () => {
   });
   
   test('getLlmFeedback throws error when prompts are missing', async () => {
-    // Using .rejects.toThrow() doesn't work well with our error handling
-    // Instead, we'll use try/catch to verify the error message
-    
     // Test for null prompts
-    try {
-      await getLlmFeedback(null);
-      fail('Expected error was not thrown');
-    } catch (error) {
-      expect(error.message).toContain('Both system and user prompts are required');
-    }
-    
-    // Test for empty object
-    try {
-      await getLlmFeedback({});
-      fail('Expected error was not thrown');
-    } catch (error) {
-      expect(error.message).toContain('Both system and user prompts are required');
-    }
-    
-    // Test for missing user prompt
-    try {
-      await getLlmFeedback({ system: "System only" });
-      fail('Expected error was not thrown');
-    } catch (error) {
-      expect(error.message).toContain('Both system and user prompts are required');
-    }
+    await expect(getLlmFeedback(null))
+      .rejects.toThrow('Both system and user prompts are required');
     
     // Test for missing system prompt
-    try {
-      await getLlmFeedback({ user: "User only" });
-      fail('Expected error was not thrown');
-    } catch (error) {
-      expect(error.message).toContain('Both system and user prompts are required');
-    }
+    await expect(getLlmFeedback({ user: 'usr' }))
+      .rejects.toThrow('Both system and user prompts are required');
+    
+    // Test for missing user prompt
+    await expect(getLlmFeedback({ system: 'sys' }))
+      .rejects.toThrow('Both system and user prompts are required');
+    
+    // Test for empty object
+    await expect(getLlmFeedback({}))
+      .rejects.toThrow('Both system and user prompts are required');
   });
 });

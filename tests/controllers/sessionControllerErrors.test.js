@@ -1,4 +1,4 @@
-const { submitCode, getHint } = require('../../controllers/sessionController');
+const { submitCode, getHint, sessions } = require('../../controllers/sessionController');
 const { getLlmFeedback } = require('../../services/llmService');
 const Session = require('../../models/Session');
 const TokenUsage = require('../../models/TokenUsage');
@@ -13,6 +13,7 @@ jest.mock('../../models/Session');
 
 describe('Session Controller Error Handling', () => {
   let req, res, session, mockSessions;
+  const testSessionId = 'test-session-id';
   
   beforeEach(() => {
     // Create request and response objects
@@ -56,7 +57,11 @@ describe('Session Controller Error Handling', () => {
     // Set up the mock sessions map
     mockSessions = new Map();
     mockSessions.set('test-session-id', session);
+    sessions.set(testSessionId, session);
     require('../../controllers/sessionController').sessions = mockSessions;
+
+    // Reset mocks before each test
+    getLlmFeedback.mockClear();
   });
   
   afterEach(() => {
@@ -64,102 +69,109 @@ describe('Session Controller Error Handling', () => {
   });
 
   test('should handle network errors from LLM in submitCode', async () => {
-    // Set up the mock LLM service to return a network error
-    getLlmFeedback.mockResolvedValueOnce({
-      error: {
-        type: 'network',
-        message: 'Failed to connect to LLM API: Network timeout',
-        originalError: new Error('Network timeout')
-      }
-    });
-    
-    // Call the controller method
+    // Set up request body
+    req.body.sessionId = testSessionId;
+    const networkError = new Error('Network timeout');
+    networkError.type = 'network';
+    networkError.originalError = new Error('Network timeout');
+
+    getLlmFeedback.mockImplementation(() => { throw networkError; });
+
     await submitCode(req, res);
-    
-    // Verify the error is handled properly
-    expect(res.json).toHaveBeenCalledWith({
-      error: {
-        type: 'network',
-        message: 'Failed to connect to LLM API: Network timeout',
-        details: 'Error: Network timeout'
-      }
-    });
+
     expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      error: {
+        type: 'system',
+        message: 'Error processing your submission',
+        details: expect.objectContaining({
+          type: 'network',
+          message: 'Network timeout',
+          details: expect.stringContaining('Error: Network timeout')
+        })
+      }
+    }));
+    expect(res.render).not.toHaveBeenCalled();
   });
   
   test('should handle JSON parsing errors from LLM in submitCode', async () => {
-    // Set up the mock LLM service to return a parse error
-    getLlmFeedback.mockResolvedValueOnce({
-      error: {
-        type: 'parse',
-        message: 'Failed to parse LLM response as JSON: Unexpected token',
-        rawResponse: 'This is not valid JSON',
-        originalError: new SyntaxError('Unexpected token')
-      }
-    });
-    
-    // Call the controller method
+    // Set up request body
+    req.body.sessionId = testSessionId;
+    const parseError = new SyntaxError('Unexpected token');
+    parseError.type = 'parse';
+    parseError.rawResponse = 'This is not valid JSON';
+    parseError.originalError = new SyntaxError('Unexpected token');
+
+    getLlmFeedback.mockImplementation(() => { throw parseError; });
+
     await submitCode(req, res);
-    
-    // Verify the error is handled properly
-    expect(res.json).toHaveBeenCalledWith({
-      error: {
-        type: 'parse',
-        message: 'Failed to parse LLM response as JSON: Unexpected token',
-        details: 'SyntaxError: Unexpected token',
-        rawResponse: 'This is not valid JSON'
-      }
-    });
+
     expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      error: {
+        type: 'system',
+        message: 'Error processing your submission',
+        details: expect.objectContaining({
+          type: 'parse',
+          message: 'Unexpected token',
+          rawResponse: 'This is not valid JSON',
+          details: expect.stringContaining('SyntaxError: Unexpected token')
+        })
+      }
+    }));
+    expect(res.render).not.toHaveBeenCalled();
   });
   
   test('should handle API errors from LLM in submitCode', async () => {
-    // Set up the mock LLM service to return an API error
-    getLlmFeedback.mockResolvedValueOnce({
-      error: {
-        type: 'api',
-        message: 'LLM service error: API responded with 429 Too Many Requests',
-        status: 429,
-        originalError: new Error('API responded with 429 Too Many Requests')
-      }
-    });
-    
-    // Call the controller method
+    // Set up request body
+    req.body.sessionId = testSessionId;
+    const apiError = new Error('API responded with 429 Too Many Requests');
+    apiError.type = 'api';
+    apiError.status = 429;
+    apiError.originalError = new Error('API responded with 429 Too Many Requests');
+
+    getLlmFeedback.mockImplementation(() => { throw apiError; });
+
     await submitCode(req, res);
-    
-    // Verify the error is handled properly
-    expect(res.json).toHaveBeenCalledWith({
-      error: {
-        type: 'api',
-        message: 'LLM service error: API responded with 429 Too Many Requests',
-        details: 'Error: API responded with 429 Too Many Requests',
-        status: 429
-      }
-    });
+
     expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      error: {
+        type: 'system',
+        message: 'Error processing your submission',
+        details: expect.objectContaining({
+          type: 'api',
+          message: 'API responded with 429 Too Many Requests',
+          status: 429,
+          details: expect.stringContaining('Error: API responded with 429 Too Many Requests')
+        })
+      }
+    }));
+    expect(res.render).not.toHaveBeenCalled();
   });
   
   test('should handle network errors from LLM in getHint', async () => {
-    // Set up the mock LLM service to return a network error
-    getLlmFeedback.mockResolvedValueOnce({
-      error: {
-        type: 'network',
-        message: 'Failed to connect to LLM API: Network timeout',
-        originalError: new Error('Network timeout')
-      }
-    });
-    
-    // Call the controller method
+    // Set up request body
+    req.body.sessionId = testSessionId;
+    const networkError = new Error('Network timeout');
+    networkError.type = 'network';
+    networkError.originalError = new Error('Network timeout');
+
+    getLlmFeedback.mockImplementation(() => { throw networkError; });
+
     await getHint(req, res);
-    
-    // Verify the error is handled properly
-    expect(res.json).toHaveBeenCalledWith({
-      error: {
-        type: 'network',
-        message: 'Failed to connect to LLM API: Network timeout',
-        details: 'Error: Network timeout'
-      }
-    });
+
     expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      error: {
+        type: 'system',
+        message: 'Failed to get hint',
+        details: expect.objectContaining({
+          type: 'network',
+          message: 'Network timeout',
+          details: expect.stringContaining('Error: Network timeout')
+        })
+      }
+    }));
   });
 });

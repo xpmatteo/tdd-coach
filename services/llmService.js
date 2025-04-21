@@ -9,11 +9,15 @@ const llmAdapter = LlmAdapterFactory.createAdapter(process.env.NODE_ENV === 'tes
  * @param {string} prompts.system - System prompt with instructions for the LLM
  * @param {string} prompts.user - User prompt with content to evaluate
  * @param {TokenUsage} [tokenUsage] - Optional TokenUsage tracker to update with usage data
- * @returns {Object} - Parsed JSON response with comments, hint, and proceed field or error object
+ * @returns {Object} - Parsed JSON response with comments, hint, and proceed field
+ * @throws {Error} Throws various errors if LLM communication or parsing fails
  */
 exports.getLlmFeedback = async (prompts, tokenUsage) => {
+  let response; // Define response here to access it in outer scope if needed
+
   try {
     if (!prompts || !prompts.system || !prompts.user) {
+      // Keep this validation error as it's internal logic
       throw new Error('Both system and user prompts are required');
     }
 
@@ -33,7 +37,8 @@ exports.getLlmFeedback = async (prompts, tokenUsage) => {
     }
 
     // Create message using the appropriate adapter
-    const response = await llmAdapter.createMessage({
+    // Errors from the adapter (network, API) will now propagate up
+    response = await llmAdapter.createMessage({
       max_tokens: 1000,
       system: prompts.system,
       messages: [
@@ -45,31 +50,24 @@ exports.getLlmFeedback = async (prompts, tokenUsage) => {
     console.log(response.content[0].text);
     console.log('--------');
 
-    // Track token usage if a tracker was provided
+    // Track token usage if a tracker was provided. Do this BEFORE parsing.
     if (tokenUsage && response.usage) {
-      // For OpenRouter, also pass the actual cost if available
       const actualCost = response.usage && response.usage.cost;
-
       tokenUsage.addUsage(
         response.usage.input_tokens,
         response.usage.output_tokens,
         actualCost
       );
-
       console.log(`Token usage: ${response.usage.input_tokens} input, ${response.usage.output_tokens} output`);
-
-      // Log the actual cost if it came from the API
       if (actualCost) {
         console.log(`Actual cost from API: $${actualCost.toFixed(5)}`);
       }
-
       console.log(`Estimated cost so far: ${tokenUsage.getFormattedCost()}`);
     }
 
-    // Parse the JSON response
+    // Parse the JSON response in a separate try/catch
     try {
       const feedback = JSON.parse(response.content[0].text);
-
       // Ensure required fields exist
       return {
         comments: feedback.comments || 'No comments provided',
@@ -77,35 +75,27 @@ exports.getLlmFeedback = async (prompts, tokenUsage) => {
         proceed: feedback.proceed || 'no'
       };
     } catch (parseError) {
-      // Return a structured error object with the raw response
-      return {
-        error: {
-          type: 'parse',
-          message: `Failed to parse LLM response as JSON: ${parseError.message}`,
-          rawResponse: response.content[0].text,
-          originalError: parseError
-        }
-      };
+      // Throw a specific error for parsing issues
+      const error = new Error(`Failed to parse LLM response as JSON: ${parseError.message}`);
+      error.type = 'parse'; // Add type for easier identification
+      error.rawResponse = response.content[0].text; // Attach raw response
+      error.originalError = parseError;
+      throw error;
     }
+
   } catch (error) {
-    // Determine error type based on error properties
-    let errorType = 'network';
-    let errorDetails = {};
-
-    // Check if this is an API-specific error (usually has status code)
-    if (error.status || error.statusCode || error.name === 'ApiError') {
-      errorType = 'api';
-      errorDetails.status = error.status || error.statusCode;
-    }
-
-    // Return a structured error object
-    return {
-      error: {
-        type: errorType,
-        message: `LLM service error: ${error.message}`,
-        ...errorDetails,
-        originalError: error
+    // Add type information if it's an adapter/network error but not already typed
+    if (!(error instanceof Error && error.type)) {
+      // Check if this is an API-specific error (usually has status code)
+      if (error.status || error.statusCode || error.name === 'ApiError') {
+        error.type = 'api';
+      } else {
+        // Assume network error otherwise
+        error.type = 'network';
       }
-    };
+    }
+    // Re-throw the error (could be from validation, adapter, or parsing)
+    console.error(`LLM Service Error (${error.type || 'unknown'}):`, error.message);
+    throw error;
   }
 };

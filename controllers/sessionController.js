@@ -111,48 +111,56 @@ exports.submitCode = async (req, res) => {
   // Get appropriate prompts for current state
   const prompts = getPrompts(session);
 
-  try {
-    let feedback;
+  // Check if mock mode is enabled
+  if (mockMode === 'on') {
+    // Mock Mode: Simulate success without calling LLM
+    const feedback = {
+      comments: `Mock mode is enabled. Automatically approving your ${session.state} state submission.`,
+      hint: "This is a mock hint. Mock mode is enabled, so no real feedback is provided.",
+      proceed: 'yes'
+    };
 
-    // Check if mock mode is enabled
-    if (mockMode === 'on') {
-      // Create a fake positive response without calling the LLM
-      feedback = {
-        comments: `Mock mode is enabled. Automatically approving your ${session.state} state submission.`,
-        hint: "This is a mock hint. Mock mode is enabled, so no real feedback is provided.",
-        proceed: 'yes'
-      };
-    } else {
-      // Normal flow - get LLM feedback with token tracking
-      feedback = await getLlmFeedback(prompts, session.tokenUsage);
-      
-      // Check if the LLM service returned an error
-      if (feedback && feedback.error) {
-        // Extract detailed error information
-        const error = feedback.error;
-        const errorDetails = error.originalError ? `${error.originalError.constructor.name}: ${error.originalError.message}` : 'Unknown error';
-        
-        // Prepare a client-friendly error response with detailed information
-        const errorResponse = {
-          error: {
-            type: error.type,
-            message: error.message,
-            details: errorDetails
-          }
-        };
-        
-        // Add additional error details based on error type
-        if (error.type === 'parse' && error.rawResponse) {
-          errorResponse.error.rawResponse = error.rawResponse;
-        }
-        if (error.type === 'api' && error.status) {
-          errorResponse.error.status = error.status;
-        }
-        
-        return res.status(500).json(errorResponse);
-      }
+    // Capture interaction (mock)
+    session.captureLastLlmInteraction({
+      state: session.state,
+      productionCode: session.productionCode,
+      testCode: session.testCode,
+      testCases: session.testCases,
+      selectedTestIndex: session.selectedTestIndex,
+      currentTestIndex: session.currentTestIndex,
+      codeExecutionResults: session.getCodeExecutionResults(),
+      llmResponse: feedback,
+      mockModeEnabled: true
+    });
+    if (testCaptureManager.isPromptCaptureModeEnabled()) {
+      session.captureInteraction({
+        state: session.state,
+        productionCode: session.productionCode,
+        testCode: session.testCode,
+        testCases: session.testCases,
+        selectedTestIndex: session.selectedTestIndex,
+        currentTestIndex: session.currentTestIndex,
+        codeExecutionResults: session.getCodeExecutionResults(),
+        llmResponse: feedback,
+        mockModeEnabled: true
+      });
     }
 
+    // Process and advance state
+    if (session.processSubmission(feedback) && feedback.proceed === 'yes') {
+      session.advanceState();
+    }
+
+    // Render updated view
+    const viewData = getSessionViewData(sessionId, session, feedback.comments, feedback.proceed);
+    return res.render('session', viewData); // Return here to avoid executing the try/catch below
+  }
+
+  // Normal Mode: Call LLM and handle potential errors
+  try {
+    // Get LLM feedback with token tracking
+    const feedback = await getLlmFeedback(prompts, session.tokenUsage);
+    
     // Always capture the last LLM interaction, regardless of capture mode
     const interactionData = {
       state: session.state,
@@ -163,7 +171,7 @@ exports.submitCode = async (req, res) => {
       currentTestIndex: session.currentTestIndex,
       codeExecutionResults: session.getCodeExecutionResults(),
       llmResponse: feedback,
-      mockModeEnabled: mockMode === 'on'
+      mockModeEnabled: false // Since we are not in mock mode here
     };
 
     session.captureLastLlmInteraction(interactionData);
@@ -182,13 +190,36 @@ exports.submitCode = async (req, res) => {
     const viewData = getSessionViewData(sessionId, session, feedback.comments, feedback.proceed);
     res.render('session', viewData);
   } catch (error) {
-    console.error('Error getting LLM feedback:', error);
-    // Return a detailed error response
+    // Handle errors from getLlmFeedback (network, API, parse, validation)
+    console.error(`Error processing submission for session ${sessionId}:`, error);
+
+    // Determine error type and details
+    const errorType = error.type || 'system'; // Default to system if type is missing
+    const errorMessage = error.message || 'An unexpected error occurred.';
+    const errorDetails = error.originalError ? `${error.originalError.constructor.name}: ${error.originalError.message}` : (error.stack || 'No details available');
+
+    // Prepare a client-friendly error response
+    const errorResponse = {
+      error: {
+        type: errorType,
+        message: errorMessage,
+        details: errorDetails
+      }
+    };
+
+    // Add specific details based on type
+    if (errorType === 'parse' && error.rawResponse) {
+      errorResponse.error.rawResponse = error.rawResponse;
+    }
+    if (errorType === 'api' && (error.status || error.statusCode)) {
+      errorResponse.error.status = error.status || error.statusCode;
+    }
+
     return res.status(500).json({
       error: {
-        type: 'system',
-        message: 'Error processing your submission',
-        details: error.message
+        type: 'system', // Keep outer type as system for client handling
+        message: 'Error processing your submission', // Generic message for client
+        details: errorResponse.error // Embed the detailed error info
       }
     });
   }
@@ -202,80 +233,51 @@ exports.getHint = async (req, res) => {
     return res.status(404).send('Session not found');
   }
 
-  // Get appropriate prompts for current state
-  const prompts = getPrompts(session);
+  // Get appropriate prompts for hint
+  const prompts = getPrompts(session, true); // Pass true for hint=true
+
+  // Check if mock mode is enabled
+  if (mockMode === 'on') {
+    const mockHint = "Mock hint: Provide a suggestion to improve the code.";
+    return res.json({ hint: mockHint });
+  }
 
   try {
-    let feedback;
+    // Get LLM feedback, but we only care about the hint
+    const feedback = await getLlmFeedback(prompts, session.tokenUsage);
+    
+    // Return only the hint
+    return res.json({ hint: feedback.hint });
 
-    // Check if mock mode is enabled
-    if (mockMode === 'on') {
-      // Create a fake positive response without calling the LLM
-      feedback = {
-        comments: `Mock mode enabled. Auto-approving ${session.state} state.`,
-        hint: "This is a mock hint since mock mode is enabled.",
-        proceed: 'yes'
-      };
-    } else {
-      // Get LLM hint with token tracking
-      feedback = await getLlmFeedback(prompts, session.tokenUsage);
-      
-      // Check if the LLM service returned an error
-      if (feedback && feedback.error) {
-        // Extract detailed error information
-        const error = feedback.error;
-        const errorDetails = error.originalError ? `${error.originalError.constructor.name}: ${error.originalError.message}` : 'Unknown error';
-        
-        // Prepare a client-friendly error response with detailed information
-        const errorResponse = {
-          error: {
-            type: error.type,
-            message: error.message,
-            details: errorDetails
-          }
-        };
-        
-        // Add additional error details based on error type
-        if (error.type === 'parse' && error.rawResponse) {
-          errorResponse.error.rawResponse = error.rawResponse;
-        }
-        if (error.type === 'api' && error.status) {
-          errorResponse.error.status = error.status;
-        }
-        
-        return res.status(500).json(errorResponse);
-      }
-    }
-
-    // Capture this interaction as well
-    const interactionData = {
-      state: session.state,
-      productionCode: session.productionCode,
-      testCode: session.testCode,
-      testCases: session.testCases,
-      selectedTestIndex: session.selectedTestIndex,
-      currentTestIndex: session.currentTestIndex,
-      codeExecutionResults: session.getCodeExecutionResults(),
-      llmResponse: feedback,
-      isHintRequest: true,
-      mockModeEnabled: mockMode === 'on'
-    };
-
-    session.captureLastLlmInteraction(interactionData);
-
-    // Return the hint and the proceed value for styling
-    res.json({
-      hint: feedback.hint,
-      proceed: feedback.proceed
-    });
   } catch (error) {
-    console.error('Error getting hint:', error);
-    // Return a detailed error response
+    // Handle errors from getLlmFeedback
+    console.error(`Error getting hint for session ${sessionId}:`, error);
+    
+    // Determine error type and details (similar to submitCode)
+    const errorType = error.type || 'system';
+    const errorMessage = error.message || 'An unexpected error occurred while getting the hint.';
+    const errorDetails = error.originalError ? `${error.originalError.constructor.name}: ${error.originalError.message}` : (error.stack || 'No details available');
+
+    const errorResponse = {
+      error: {
+        type: errorType,
+        message: errorMessage,
+        details: errorDetails
+      }
+    };
+    
+    if (errorType === 'parse' && error.rawResponse) {
+      errorResponse.error.rawResponse = error.rawResponse;
+    }
+    if (errorType === 'api' && (error.status || error.statusCode)) {
+      errorResponse.error.status = error.status || error.statusCode;
+    }
+    
     return res.status(500).json({
       error: {
-        type: 'system',
-        message: 'Error getting hint',
-        details: error.message
+        type: 'system', // Keep outer type as system
+        message: 'Failed to get hint',
+        details: errorResponse.error // Embed details
       }
     });
   }

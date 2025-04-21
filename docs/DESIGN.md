@@ -128,12 +128,12 @@ This separation leverages Claude's system/user message design, with system promp
 The LLM service:
 - Uses an adapter pattern to support multiple LLM providers (Anthropic Claude and OpenRouter)
 - Sends formatted prompts to the selected LLM API using system and user messages
-- Requests responses in JSON format
-- Extracts feedback comments, hints, and a binary proceed/don't proceed signal
-- Tracks token usage and calculates estimated costs based on the provider and model being used
+- Requests responses in JSON format, attempts to parse it, and returns the structured data (comments, hint, proceed).
+- Throws specific, typed errors (network, api, parse) if communication with the LLM fails or the response cannot be parsed. The 'parse' error includes the raw response text.
+- Tracks token usage (updating *before* attempting to parse the response) and calculates estimated costs based on the provider and model.
 - Always stores the last LLM interaction in the session for consistent feedback rendering
-- Supports a mock mode toggle that skips API calls and provides fake positive responses for testing and development
-- Separates test capture functionality from regular LLM interaction tracking
+- Supports a mock mode toggle (handled in the controller) that skips API calls.
+- Separates test capture functionality.
 
 #### LLM Adapter Architecture
 
@@ -181,10 +181,15 @@ HTMX is used for dynamic updates without a separate frontend framework.
 
 1. User selects a test case or submits code
 2. When not in PICK state, the server executes the code and captures execution results
-3. Server updates session state and generates appropriate system and user prompts (including execution results)
-4. LLM evaluates code and returns structured feedback
-5. Server processes feedback using state-specific logic and applies visual styling (green/pink) based on the "proceed" field 
-6. If feedback processing indicates success, session advances to next state
+3. Server updates session state and generates appropriate system and user prompts.
+4. The `sessionController` calls the `llmService` to get feedback.
+5. The `llmService` communicates with the LLM API via an adapter.
+   - **Success Path:**
+     - The service receives the response, updates token usage, parses the JSON, and returns the structured feedback (comments, hint, proceed).
+     - The controller processes the feedback, updates the session state (potentially advancing it), and re-renders the UI with the feedback.
+   - **Error Path:**
+     - If the `llmService` encounters an error (network, API, or parsing), it throws a typed error.
+     - The `sessionController` catches the error, logs it, and returns a `500` status code with a structured JSON error payload (`{ error: { type: 'system', message: '...', details: { type: specificType, ... } } }`) to the client. The UI rendering is skipped in this case.
 
 ## Future Enhancements
 

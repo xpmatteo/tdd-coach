@@ -32,6 +32,13 @@ This document provides guidelines for AI coding assistants when working on the T
 7. Follow PascalCase for classes
 8. Use JSDoc comments for functions and classes
 
+### Error Handling Conventions
+1. **Validate inputs** and handle potential issues early.
+2. **Services should generally throw errors** when operations fail (e.g., API calls, data parsing). Use specific error types or add properties (like `.type`) to errors for better identification.
+3. **Controllers should catch errors** originating from services.
+4. For user-facing actions (like HTMX requests), controllers should typically return appropriate HTTP status codes (e.g., 500 for server errors) and a structured JSON error payload rather than crashing or rendering a generic error page.
+5. **Log errors** server-side with sufficient detail for debugging.
+
 ## Project Structure
 
 Maintain the established project structure:
@@ -92,8 +99,10 @@ When writing or modifying LLM prompts:
 1. Write tests before implementing features
 2. Use Jest for testing
 3. Test each component in isolation
-4. Use mocks for external dependencies (LLM API)
-5. Test the happy path and edge cases
+4. **Mock Service Layers:** When testing controllers (e.g., `sessionController`), mock the service layer dependencies (e.g., `llmService`) to isolate the controller's logic and avoid testing the actual service implementation or external calls.
+5. Use mocks for direct external dependencies (e.g., LLM SDKs within adapters) when testing the layer that uses them.
+6. Test the happy path and edge cases, including error handling paths.
+7. **Jest Mocking Pitfalls:** Be mindful of module hoisting when mocking dependencies, especially factories (`jest.mock` runs before top-level variable assignments). If mocking a dependency proves difficult, consider mocking the module under test *itself*, especially for focused unit tests (like testing error handling). Configure mock implementations *within* specific `test(...)` blocks rather than relying solely on `beforeEach` if behavior needs to vary per test.
 
 ## Documentation
 
