@@ -56,6 +56,7 @@ class OpenRouterAdapter {
         // Request usage details including cost
         usage: { include: true }
       });
+      console.log("Used model:", response.model, "; provider:", response.provider);
 
       // Transform the response to match Anthropic's format
       return this.transformResponse(response);
@@ -73,7 +74,7 @@ class OpenRouterAdapter {
   transformResponse(response) {
     // Extract the message content
     const messageContent = response.choices[0].message.content;
-    console.log("Used model:", this.model);
+
     // Extract usage data
     const usage = response.usage || {
       prompt_tokens: 0,
