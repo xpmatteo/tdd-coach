@@ -156,7 +156,7 @@ Token usage and cost tracking is handled via OpenRouter:
   - The OpenRouterAdapter adds `usage: { include: true }` to API requests
   - Actual cost information is extracted from the API response
   - TokenUsage class has been enhanced to accept and track actual cost data
-  - When actual cost data is available, it takes precedence over estimated calculations based on token counts and generic rates.
+  - The application now relies *solely* on this actual cost data for tracking.
   - The UI displays the actual cost from the API rather than relying on estimates
 
 This provides accurate cost tracking without requiring additional API calls specifically for cost retrieval.

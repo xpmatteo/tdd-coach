@@ -2,17 +2,6 @@
  * TokenUsage class for tracking LLM token usage and calculating estimated costs.
  */
 class TokenUsage {
-  // Static constants for provider pricing (per million tokens in USD)
-  static OPENROUTER_ANTHROPIC_PRICING = {
-    INPUT_COST_PER_MTOK: 3.00, // Same as direct pricing for Claude
-    OUTPUT_COST_PER_MTOK: 15.00 // Same as direct pricing for Claude
-  };
-  
-  static OPENROUTER_GPT4_PRICING = {
-    INPUT_COST_PER_MTOK: 10.00,
-    OUTPUT_COST_PER_MTOK: 30.00
-  };
-  
   /**
    * Create a new TokenUsage tracker.
    */
@@ -21,36 +10,19 @@ class TokenUsage {
     this.outputTokens = 0;
     this.callCount = 0;
     this.actualCost = 0;
-    
-    this.setProvider('openrouter', process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet'); // Default to OpenRouter
+    this.provider = 'openrouter'; // Provider is always openrouter now
+    this.model = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet'; // Store the model being used
   }
   
   /**
-   * Set the provider for cost calculations
-   * @param {string} provider - The provider name (anthropic or openrouter)
+   * Set the model being used (provider is always openrouter)
+   * @param {string} _provider - Ignored, always 'openrouter'
    * @param {string} model - The model name when using OpenRouter
    */
-  setProvider(provider = 'anthropic', model = '') {
-    // Ensure provider is always OpenRouter
-    provider = 'openrouter';
-
-    this.provider = provider;
+  setProvider(_provider = 'openrouter', model = '') {
+    this.provider = 'openrouter'; // Always openrouter
     this.model = model;
-
-    // Update pricing based on the OpenRouter model
-    if (model.includes('anthropic') || model.includes('claude')) {
-      this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.INPUT_COST_PER_MTOK;
-      this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK;
-    } else if (model.includes('gpt-4')) {
-      this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_GPT4_PRICING.INPUT_COST_PER_MTOK;
-      this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_GPT4_PRICING.OUTPUT_COST_PER_MTOK;
-    } else {
-      // Fallback or default pricing if model is unknown or different
-      // For now, let's default to Claude pricing if model not recognized
-      console.warn(`Unknown OpenRouter model: ${model}. Using Claude pricing as default.`);
-      this.INPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.INPUT_COST_PER_MTOK;
-      this.OUTPUT_COST_PER_MTOK = TokenUsage.OPENROUTER_ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK;
-    }
+    // No pricing logic needed here anymore
   }
 
   /**
@@ -88,20 +60,12 @@ class TokenUsage {
   }
 
   /**
-   * Calculate the estimated cost of token usage so far.
-   * @returns {number} Estimated cost in USD
+   * Get the total actual cost reported by the API so far.
+   * @returns {number} Actual cost in USD
    */
-  getEstimatedCost() {
-    // If we have actual cost data from the API, use that instead of calculating
-    if (this.actualCost > 0) {
-      return this.actualCost;
-    }
-    
-    // Otherwise calculate based on token counts and rates
-    const inputCost = (this.inputTokens / 1_000_000) * this.INPUT_COST_PER_MTOK;
-    const outputCost = (this.outputTokens / 1_000_000) * this.OUTPUT_COST_PER_MTOK;
-    
-    return inputCost + outputCost;
+  getTotalCost() {
+    // We rely solely on the actual cost provided by the OpenRouter API
+    return this.actualCost;
   }
 
   /**
@@ -110,7 +74,7 @@ class TokenUsage {
    */
   getFormattedCost() {
     // Format with fewer decimal places for UI display, and use dollar sign
-    return `$${this.getEstimatedCost().toFixed(4)}`;
+    return `$${this.getTotalCost().toFixed(4)}`;
   }
 
   /**
@@ -118,20 +82,13 @@ class TokenUsage {
    * @returns {Object} Object containing usage statistics
    */
   getStats() {
-    const inputCost = (this.inputTokens / 1_000_000) * this.INPUT_COST_PER_MTOK;
-    const outputCost = (this.outputTokens / 1_000_000) * this.OUTPUT_COST_PER_MTOK;
-    const usingActualCost = this.actualCost > 0;
-    
     return {
       inputTokens: this.inputTokens,
       outputTokens: this.outputTokens,
       totalTokens: this.inputTokens + this.outputTokens,
       callCount: this.callCount,
-      estimatedCost: this.getEstimatedCost(),
+      totalCost: this.getTotalCost(),
       formattedCost: this.getFormattedCost(),
-      inputCost: inputCost,
-      outputCost: outputCost,
-      usingActualCost: usingActualCost
     };
   }
 

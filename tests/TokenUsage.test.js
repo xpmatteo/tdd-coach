@@ -5,7 +5,7 @@ describe('TokenUsage', () => {
 
   beforeEach(() => {
     // Mock environment variables if needed for tests
-    // Use a known model for predictable pricing in tests
+    // Use a default model
     process.env.OPENROUTER_MODEL = 'anthropic/claude-3-7-sonnet';
     tokenUsage = new TokenUsage();
   });
@@ -18,27 +18,14 @@ describe('TokenUsage', () => {
   test('constructor defaults to OpenRouter provider and model from env', () => {
     expect(tokenUsage.provider).toBe('openrouter');
     expect(tokenUsage.model).toBe('anthropic/claude-3-7-sonnet');
-    // Check if pricing matches the default model (Claude)
-    expect(tokenUsage.INPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_ANTHROPIC_PRICING.INPUT_COST_PER_MTOK);
-    expect(tokenUsage.OUTPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK);
+    // No pricing properties to check anymore
   });
 
-  test('setProvider forces provider to openrouter and sets model, updating pricing for Claude', () => {
+  test('setProvider forces provider to openrouter and sets model', () => {
     tokenUsage.setProvider('some-ignored-provider', 'anthropic/claude-3-haiku'); // Provider arg is ignored
     expect(tokenUsage.provider).toBe('openrouter');
     expect(tokenUsage.model).toBe('anthropic/claude-3-haiku');
-    // Check pricing is still Claude's
-    expect(tokenUsage.INPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_ANTHROPIC_PRICING.INPUT_COST_PER_MTOK);
-    expect(tokenUsage.OUTPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_ANTHROPIC_PRICING.OUTPUT_COST_PER_MTOK);
-  });
-
-  test('setProvider forces provider to openrouter and sets model, updating pricing for GPT-4', () => {
-    tokenUsage.setProvider('anthropic', 'openai/gpt-4o'); // Provider arg is ignored
-    expect(tokenUsage.provider).toBe('openrouter');
-    expect(tokenUsage.model).toBe('openai/gpt-4o');
-    // Check pricing is now GPT-4's
-    expect(tokenUsage.INPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_GPT4_PRICING.INPUT_COST_PER_MTOK);
-    expect(tokenUsage.OUTPUT_COST_PER_MTOK).toBe(TokenUsage.OPENROUTER_GPT4_PRICING.OUTPUT_COST_PER_MTOK);
+    // No pricing properties to check anymore
   });
 
   test('starts with zero values', () => {
@@ -74,55 +61,27 @@ describe('TokenUsage', () => {
     expect(tokenUsage.actualCost).toBe(0.00579); // 0.00234 + 0.00345
   });
 
-  test('calculates estimated cost correctly for OpenRouter with Anthropic models', () => {
-    tokenUsage.setProvider('openrouter', 'anthropic/claude-3-7-sonnet');
-    tokenUsage.addUsage(1_000_000, 1_000_000);
-    const cost = tokenUsage.getEstimatedCost();
-    // If no actual cost is provided, it should calculate based on rates
-    expect(cost).toBe(18); // $3 for input + $15 for output = 18
-  });
-  
-  test('calculates estimated cost correctly for OpenRouter with GPT-4 models', () => {
-    tokenUsage.setProvider('openrouter', 'openai/gpt-4o');
-    tokenUsage.addUsage(1_000_000, 1_000_000);
-    const cost = tokenUsage.getEstimatedCost();
-    // If no actual cost is provided, it should calculate based on rates
-    expect(cost).toBe(40); // $10 for input + $30 for output = 40
-  });
-
-  test('returns actual cost when available, overriding calculation', () => {
+  test('getTotalCost returns accumulated actual cost', () => {
     tokenUsage.setProvider('openrouter', 'anthropic/claude-3-7-sonnet'); // Rates would calculate to $18
     tokenUsage.addUsage(1_000_000, 1_000_000, 17.5); // Provide actual cost
-    const cost = tokenUsage.getEstimatedCost();
+    const cost = tokenUsage.getTotalCost();
     expect(cost).toBe(17.5); // Uses actual cost instead of calculation
+
+    tokenUsage.addUsage(100, 50, 0.1); // Add more cost
+    expect(tokenUsage.getTotalCost()).toBe(17.6);
+
+    tokenUsage.addUsage(200, 100); // Add usage without cost
+    expect(tokenUsage.getTotalCost()).toBe(17.6); // Cost remains the same
   });
 
-  test('formats cost correctly for default OpenRouter model (Claude)', () => {
+  test('formats cost correctly based on actual cost', () => {
     // Uses the model set in beforeEach ('anthropic/claude-3-7-sonnet')
-    tokenUsage.addUsage(500_000, 100_000);
+    tokenUsage.addUsage(500_000, 100_000, 3.123456);
     // 0.5M * $3 (input) + 0.1M * $15 (output) = 1.5 + 1.5 = 3.0
-    expect(tokenUsage.getFormattedCost()).toBe('$3.0000');
+    expect(tokenUsage.getFormattedCost()).toBe('$3.1235');
   });
 
-  test('provides detailed statistics without actual cost', () => {
-    tokenUsage.setProvider('openrouter', 'openai/gpt-4o'); // Use GPT-4 pricing
-    tokenUsage.addUsage(100_000, 20_000); // No actual cost provided
-    const stats = tokenUsage.getStats();
-
-    expect(stats.inputTokens).toBe(100_000);
-    expect(stats.outputTokens).toBe(20_000);
-    expect(stats.totalTokens).toBe(120_000);
-    expect(stats.callCount).toBe(1);
-    // Estimated cost calculated based on GPT-4 rates
-    // 0.1M * $10 (input) + 0.02M * $30 (output) = 1 + 0.6 = 1.6
-    expect(stats.estimatedCost).toBeCloseTo(1.6);
-    expect(stats.formattedCost).toBe('$1.6000');
-    expect(stats.inputCost).toBeCloseTo(1.0);
-    expect(stats.outputCost).toBeCloseTo(0.6);
-    expect(stats.usingActualCost).toBe(false);
-  });
-
-  test('provides detailed statistics with actual cost', () => {
+  test('provides detailed statistics including total cost', () => {
     tokenUsage.setProvider('openrouter', 'anthropic/claude-3-7-sonnet');
     tokenUsage.addUsage(100_000, 20_000, 0.5); // Actual cost provided
     const stats = tokenUsage.getStats();
@@ -131,11 +90,13 @@ describe('TokenUsage', () => {
     expect(stats.outputTokens).toBe(20_000);
     expect(stats.totalTokens).toBe(120_000);
     expect(stats.callCount).toBe(1);
-    expect(stats.estimatedCost).toBe(0.5); // Uses the actual cost
+    expect(stats.totalCost).toBe(0.5);
     expect(stats.formattedCost).toBe('$0.5000');
-    expect(stats.inputCost).toBeCloseTo(0.3); // Still calculated
-    expect(stats.outputCost).toBeCloseTo(0.3); // Still calculated
-    expect(stats.usingActualCost).toBe(true);
+    // Ensure removed fields are not present
+    expect(stats).not.toHaveProperty('estimatedCost');
+    expect(stats).not.toHaveProperty('inputCost');
+    expect(stats).not.toHaveProperty('outputCost');
+    expect(stats).not.toHaveProperty('usingActualCost');
   });
 
   test('resets all counters including actual cost', () => {
