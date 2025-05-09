@@ -37,7 +37,7 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
    PORT=3000
    ```
    
-   You only need to set the API key(s) for the provider(s) you plan to use. By default, the application will use Anthropic's Claude.
+   By default, the application will use Anthropic's Claude.
 
 ## Usage
 
