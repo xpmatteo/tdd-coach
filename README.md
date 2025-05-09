@@ -67,7 +67,6 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
 - Node.js with Express for server-side logic
 - HTMX for dynamic UI interactions without a separate frontend framework
 - Handlebars for view and prompt templating
-- CodeMirror for code editing
 - AI coaching with any model available through OpenRouter
 
 ## Project Structure
@@ -86,24 +85,3 @@ Run tests:
 ```
 npm test
 ```
-
-### Testing
-
-For testing, a MockAdapter is automatically used instead of real API calls to Anthropic or OpenRouter. This makes it possible to run tests without providing API keys.
-
-## Prompt Testing System
-
-The TDD Coach includes a comprehensive system for testing and improving the AI prompts. This feature helps capture real interactions, build a test suite, and analyze prompt performance over time.
-
-### Enabling Prompt Testing Mode
-
-1. Set `PROMPT_CAPTURE_MODE=true` in your `.env` file
-2. Restart the application
-3. Use the TDD Coach normally
-4. After receiving feedback, click "Save as Prompt Test"
-
-See [PROMPT_TESTING_SYSTEM.md](PROMPT_TESTING_SYSTEM.md) for detailed documentation.
-
-## Recent Updates
-
-- **Cost Tracking Improvement**: When using OpenRouter as the LLM provider, the application now utilizes the actual cost data returned by the OpenRouter API instead of relying on estimates. This provides more accurate cost tracking without requiring additional API calls.
