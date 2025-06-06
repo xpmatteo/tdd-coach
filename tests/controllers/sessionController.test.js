@@ -9,10 +9,6 @@ jest.mock('../../services/promptService');
 jest.mock('../../services/llmService');
 jest.mock('../../services/codeExecutionService');
 jest.mock('../../models/Session');
-jest.mock('../../models/testCapture/TestCaptureManager', () => ({
-  isPromptCaptureModeEnabled: jest.fn().mockReturnValue(false),
-  initialize: jest.fn().mockResolvedValue(undefined)
-}));
 
 describe('sessionController', () => {
   let req, res, mockSession;

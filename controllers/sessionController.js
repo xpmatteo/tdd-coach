@@ -2,7 +2,6 @@ const { getPrompts } = require('../services/promptService');
 const { getLlmFeedback } = require('../services/llmService');
 const { executeCode } = require('../services/codeExecutionService');
 const Session = require('../models/Session');
-const testCaptureManager = require('../models/testCapture/TestCaptureManager');
 const { v4: uuidv4 } = require('uuid');
 const katas = require('../models/katas');
 
@@ -53,7 +52,6 @@ const getSessionViewData = (sessionId, session, feedback = null, proceed = null)
     selectedTestIndex: session.selectedTestIndex,
     proceed: proceed,
     runningCost: session.runningCost.getStats(),
-    isPromptCaptureModeEnabled: testCaptureManager.isPromptCaptureModeEnabled(),
     isProductionCodeEditorEnabled: session.state == 'GREEN' || session.state == 'REFACTOR',
     isTestCodeEditorEnabled: session.state == 'RED' || session.state == 'REFACTOR',
     mockModeEnabled: lastInteraction && lastInteraction.mockModeEnabled,
@@ -176,10 +174,6 @@ exports.submitCode = async (req, res) => {
 
     session.captureLastLlmInteraction(interactionData);
 
-    // Capture interaction for test case creation if capture mode is enabled
-    if (testCaptureManager.isPromptCaptureModeEnabled()) {
-      session.captureInteraction(interactionData);
-    }
 
     // Process feedback and update session state if needed
     if (session.processSubmission(feedback) && feedback.proceed === 'yes') {

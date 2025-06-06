@@ -13,7 +13,6 @@ class Session {
   #testCode;
   #currentTestIndex;
   #selectedTestIndex;
-  #capturedInteraction;
   #lastLlmInteraction;
   #currentState;
   #runningCost;
@@ -35,7 +34,6 @@ class Session {
     this.#testCode = kata.initialTestCode || '';
     this.#currentTestIndex = null;
     this.#selectedTestIndex = null;
-    this.#capturedInteraction = null;
     this.#lastLlmInteraction = null;
     this.#codeExecutionResults = null;
 
@@ -159,19 +157,6 @@ class Session {
     this.#codeExecutionResults = results;
   }
 
-  /**
-   * Capture an interaction for potential test case creation
-   * @param {Object} interactionData - Data to capture
-   */
-  captureInteraction(interactionData) {
-    if (process.env.PROMPT_CAPTURE_MODE !== 'true') return;
-
-    this.#capturedInteraction = {
-      ...interactionData,
-      timestamp: new Date().toISOString(),
-      id: Date.now().toString()
-    };
-  }
 
   /**
    * Capture the last LLM interaction regardless of capture mode
@@ -189,20 +174,6 @@ class Session {
     return this.#lastLlmInteraction;
   }
 
-  /**
-   * Get the currently captured interaction
-   * @returns {Object|null} - The captured interaction or null
-   */
-  getCurrentCapture() {
-    return this.#capturedInteraction;
-  }
-
-  /**
-   * Clear the captured interaction
-   */
-  clearCapturedInteraction() {
-    this.#capturedInteraction = null;
-  }
 
   /**
    * Set the current state of the session

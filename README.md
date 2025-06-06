@@ -60,7 +60,6 @@ The application uses an LLM (Claude model from Anthropic) to provide personalize
 - Accurate API cost tracking for LLM interactions using data from OpenRouter (displays in the UI)
 - Persistent LLM feedback that's always preserved between page reloads
 - Development mode toggle to skip LLM API calls and use fake positive responses
-- Prompt Testing System for capturing, managing, and analyzing test cases for LLM prompts
 
 ## Technology Stack
 
