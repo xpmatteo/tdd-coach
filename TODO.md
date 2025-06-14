@@ -6,8 +6,6 @@ BUGS
 - disable the editors according to the state
     - make them regular text areas
 - resize vertically the editors with the window size
-- make the promptCaptureManager a service not a model
-- make the capture part of session state
 - have special test sessions always available to test the states
 - 
 - avoid resetting the scrolls after submit

@@ -78,7 +78,6 @@ This is a TDD (Test-Driven Development) coaching application that guides users t
 Requires `.env` file with:
 - `OPENROUTER_API_KEY` - For LLM integration
 - `OPENROUTER_MODEL` - Model selection (e.g., "anthropic/claude-3-7-sonnet")
-- `PROMPT_CAPTURE_MODE=true` - Enables prompt testing system
 - `PORT=3000` - Server port
 
 ### Current Limitations

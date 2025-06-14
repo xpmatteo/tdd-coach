@@ -133,7 +133,6 @@ The LLM service:
 - Tracks cumulative cost based on data returned directly from the OpenRouter API.
 - Always stores the last LLM interaction in the session for consistent feedback rendering
 - Supports a mock mode toggle (handled in the controller) that skips API calls.
-- Separates test capture functionality.
 
 #### LLM Adapter Architecture
 

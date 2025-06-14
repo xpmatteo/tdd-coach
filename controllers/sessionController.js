@@ -8,7 +8,7 @@ const katas = require('../models/katas');
 // Store active sessions in memory (replace with proper storage in production)
 const sessions = new Map();
 
-// Export sessions map for test capture controller
+// Export sessions map for testing
 exports.sessions = sessions;
 
 exports.newSession = (req, res) => {
@@ -130,19 +130,6 @@ exports.submitCode = async (req, res) => {
       llmResponse: feedback,
       mockModeEnabled: true
     });
-    if (testCaptureManager.isPromptCaptureModeEnabled()) {
-      session.captureInteraction({
-        state: session.state,
-        productionCode: session.productionCode,
-        testCode: session.testCode,
-        testCases: session.testCases,
-        selectedTestIndex: session.selectedTestIndex,
-        currentTestIndex: session.currentTestIndex,
-        codeExecutionResults: session.getCodeExecutionResults(),
-        llmResponse: feedback,
-        mockModeEnabled: true
-      });
-    }
 
     // Process and advance state
     if (session.processSubmission(feedback) && feedback.proceed === 'yes') {

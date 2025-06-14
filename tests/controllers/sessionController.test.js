@@ -45,7 +45,6 @@ describe('sessionController', () => {
       processSubmission: jest.fn().mockReturnValue(true),
       advanceState: jest.fn(),
       captureLastLlmInteraction: jest.fn(),
-      captureInteraction: jest.fn(),
       getStateDescription: jest.fn().mockReturnValue('Write a failing test'),
       runningCost: {
         getStats: jest.fn().mockReturnValue({ totalCost: 0, formattedCost: '$0.0000' })
