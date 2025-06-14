@@ -141,6 +141,11 @@ exports.submitCode = async (req, res) => {
       hint: "This is a mock hint. Mock mode is enabled, so no real feedback is provided.",
       proceed: 'yes'
     };
+    
+    // Add kata-complete field for PICK state in mock mode
+    if (session.state === 'PICK') {
+      feedback['kata-complete'] = 'no'; // Default to no completion in mock mode
+    }
 
     // Capture interaction (mock)
     session.captureLastLlmInteraction({

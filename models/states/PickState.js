@@ -44,6 +44,13 @@ class PickState extends State {
    * @returns {boolean} Whether to advance to the next state
    */
   processSubmission(feedback) {
+    // Check if kata is complete
+    if (feedback['kata-complete'] === 'yes') {
+      const CompleteState = require('./CompleteState');
+      this.session.state = new CompleteState(this.session);
+      return true;
+    }
+    
     if (feedback.proceed === 'yes' && this.session.selectedTestIndex !== null) {
       try {
         this.session.selectTestCase(parseInt(this.session.selectedTestIndex, 10));

@@ -78,6 +78,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h2 class="h5 mb-0">{{stateDescription}}</h2>
                 <div class="d-flex align-items-center">
+                    <span class="badge bg-secondary me-2">{{state}}</span>
                     <span class="badge bg-info me-3">LLM Cost: {{runningCost.formattedCost}}</span>
                     <form hx-post="/session/restart" hx-target="body">
                         <input type="hidden" name="sessionId" value="{{sessionId}}">
@@ -92,6 +93,68 @@
     </div>
 </div>
 
+{{#if (eq state "COMPLETE")}}
+<!-- COMPLETE STATE: Show congratulations and home option -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3 class="h5 mb-0">🎉 Kata Complete!</h3>
+            </div>
+            <div class="card-body text-center">
+                <h4>Congratulations!</h4>
+                <p class="lead">You have successfully completed the kata using Test-Driven Development.</p>
+                
+                <div class="mt-4 mb-3">
+                    <h5>Final Results:</h5>
+                    <div class="row">
+                        {{#each testCases}}
+                        <div class="col-12 mb-2">
+                            <span class="badge bg-success me-2">✓</span>
+                            {{description}}
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="/" class="btn btn-primary btn-lg">Return to Home</a>
+                    <form class="d-inline-block ms-2" hx-post="/session/restart" hx-target="body">
+                        <input type="hidden" name="sessionId" value="{{sessionId}}">
+                        <button type="submit" class="btn btn-outline-primary btn-lg">Try Again</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Show final code for reference -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="h6 mb-0">Final Production Code</h3>
+            </div>
+            <div class="card-body">
+                <pre><code>{{productionCode}}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="h6 mb-0">Final Test Code</h3>
+            </div>
+            <div class="card-body">
+                <pre><code>{{testCode}}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{else}}
+<!-- NORMAL STATES: Show the regular TDD interface -->
 <form id="code-form" hx-post="/session/submit" hx-target="body" hx-indicator="#feedback-loading">
     <input type="hidden" name="sessionId" value="{{sessionId}}">
 
@@ -217,6 +280,7 @@
         </div>
     </div>
 </form>
+{{/if}}
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

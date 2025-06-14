@@ -1,0 +1,18 @@
+I have successfully completed the {{kataName}} kata using Test-Driven Development.
+
+Final test cases:
+{{#each testCases}}
+- [{{#if (eq status "DONE")}}✓{{else if (eq status "IN_PROGRESS")}}🚧{{else}}□{{/if}}] {{description}}
+{{/each}}
+
+Final production code:
+```javascript
+{{productionCode}}
+```
+
+Final test code:
+```javascript
+{{testCode}}
+```
+
+All test cases have been implemented and are passing. Please provide congratulations and any final feedback on completing this kata.
