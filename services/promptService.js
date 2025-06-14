@@ -62,6 +62,12 @@ exports.getPrompts = (session) => {
   const codeExecutionResults = session.getCodeExecutionResults ? 
     session.getCodeExecutionResults() : null;
 
+  // Get previous versions if available
+  const previousTestCode = session.getPreviousTestCode ? 
+    session.getPreviousTestCode() : '';
+  const previousProductionCode = session.getPreviousProductionCode ? 
+    session.getPreviousProductionCode() : '';
+
   // Prepare context for templates
   const context = {
     state: state,
@@ -72,7 +78,11 @@ exports.getPrompts = (session) => {
     currentTest,
     selectedTestIndex: session.selectedTestIndex,
     codeExecutionResults,
-    hasCodeExecutionResults: !!codeExecutionResults
+    hasCodeExecutionResults: !!codeExecutionResults,
+    previousTestCode,
+    previousProductionCode,
+    hasPreviousTestCode: !!previousTestCode,
+    hasPreviousProductionCode: !!previousProductionCode
   };
 
   // Apply templates with context

@@ -12,10 +12,24 @@ Current production code:
 {{productionCode}}
 ```
 
+{{#if hasPreviousProductionCode}}
+Previous production code (for context):
+```javascript
+{{previousProductionCode}}
+```
+{{/if}}
+
 Current test code:
 ```javascript
 {{testCode}}
 ```
+
+{{#if hasPreviousTestCode}}
+Previous test code (for context):
+```javascript
+{{previousTestCode}}
+```
+{{/if}}
 
 {{#if hasCodeExecutionResults}}
 I executed the code and here are the results:

@@ -17,6 +17,8 @@ class Session {
   #currentState;
   #runningCost;
   #codeExecutionResults;
+  #previousTestCode;
+  #previousProductionCode;
 
   /**
    * Create a new TDD session
@@ -36,6 +38,8 @@ class Session {
     this.#selectedTestIndex = null;
     this.#lastLlmInteraction = null;
     this.#codeExecutionResults = null;
+    this.#previousTestCode = '';
+    this.#previousProductionCode = '';
 
     // Initialize cost tracking
     this.#runningCost = new RunningCost();
@@ -174,6 +178,30 @@ class Session {
     return this.#lastLlmInteraction;
   }
 
+  /**
+   * Get the previous test code
+   * @returns {string} Previous test code
+   */
+  getPreviousTestCode() {
+    return this.#previousTestCode;
+  }
+
+  /**
+   * Get the previous production code
+   * @returns {string} Previous production code
+   */
+  getPreviousProductionCode() {
+    return this.#previousProductionCode;
+  }
+
+  /**
+   * Capture current versions before state transition
+   */
+  captureCurrentVersions() {
+    this.#previousTestCode = this.#testCode;
+    this.#previousProductionCode = this.#productionCode;
+  }
+
 
   /**
    * Set the current state of the session
@@ -182,6 +210,7 @@ class Session {
    */
   setCurrentState(state) {
     if (this.#currentState) {
+      this.captureCurrentVersions();
       this.#currentState.onExit();
     }
 
@@ -323,7 +352,9 @@ class Session {
       lastLlmInteraction: this.#lastLlmInteraction,
       currentState: this.#currentState.getName(),
       runningCost: this.#runningCost.toJSON(),
-      codeExecutionResults: this.#codeExecutionResults
+      codeExecutionResults: this.#codeExecutionResults,
+      previousTestCode: this.#previousTestCode,
+      previousProductionCode: this.#previousProductionCode
     };
   }
 
@@ -357,6 +388,8 @@ class Session {
     session.#selectedTestIndex = data.selectedTestIndex;
     session.#lastLlmInteraction = data.lastLlmInteraction;
     session.#codeExecutionResults = data.codeExecutionResults;
+    session.#previousTestCode = data.previousTestCode || '';
+    session.#previousProductionCode = data.previousProductionCode || '';
     
     // Restore running cost
     session.#runningCost = RunningCost.fromJSON(data.runningCost);
