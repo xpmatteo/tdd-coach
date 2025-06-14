@@ -20,6 +20,7 @@ Current test code:
 {{#if hasCodeExecutionResults}}
 I executed the code and here are the results:
 
+<results>
 {{#if codeExecutionResults.error}}
 Error: {{codeExecutionResults.error}}
 {{/if}}
@@ -37,6 +38,7 @@ Console Output:
 {{/if}}
 
 Overall result: {{#if codeExecutionResults.success}}PASS{{else}}FAIL{{/if}}
+</results>
 {{/if}}
 
 Please evaluate my refactoring and provide feedback.

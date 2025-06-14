@@ -5,9 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Common Commands
 
 ### Development
-- `npm start` - Start the server (production mode)
 - `make dev` - Start development server with hot reloading
-- `npm test` - Run the Jest test suite
+- `make test` - Run the Jest test suite
 
 ### Testing
 Tests use Jest framework. For focused testing, run individual test files:
