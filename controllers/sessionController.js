@@ -2,16 +2,18 @@ const { getPrompts } = require('../services/promptService');
 const { getLlmFeedback } = require('../services/llmService');
 const { executeCode } = require('../services/codeExecutionService');
 const Session = require('../models/Session');
+const SessionPersistenceService = require('../services/sessionPersistenceService');
 const { v4: uuidv4 } = require('uuid');
 const katas = require('../models/katas');
 
-// Store active sessions in memory (replace with proper storage in production)
+// Store active sessions in memory (with persistence backing)
 const sessions = new Map();
+const persistenceService = new SessionPersistenceService();
 
 // Export sessions map for testing
 exports.sessions = sessions;
 
-exports.newSession = (req, res) => {
+exports.newSession = async (req, res) => {
   // Get the FizzBuzz kata object
   const fizzbuzzKata = katas['fizzbuzz'];
   if (!fizzbuzzKata) {
@@ -22,6 +24,14 @@ exports.newSession = (req, res) => {
   const sessionId = uuidv4();
   const session = new Session(fizzbuzzKata);
   sessions.set(sessionId, session);
+
+  // Save initial session state
+  try {
+    await persistenceService.saveSession(sessionId, session.toJSON());
+  } catch (error) {
+    console.error(`Error saving new session ${sessionId}:`, error);
+    // Continue without persistence - don't fail session creation
+  }
 
   // Redirect to the session URL with ID
   res.redirect(`/session/${sessionId}`);
@@ -61,9 +71,23 @@ const getSessionViewData = (sessionId, session, feedback = null, proceed = null)
   };
 };
 
-exports.getSession = (req, res) => {
+exports.getSession = async (req, res) => {
   const sessionId = req.params.id;
-  const session = sessions.get(sessionId);
+  let session = sessions.get(sessionId);
+
+  // If session not in memory, try to load from persistence
+  if (!session) {
+    try {
+      const sessionData = await persistenceService.loadLatestSession(sessionId);
+      if (sessionData) {
+        session = Session.fromJSON(sessionData);
+        sessions.set(sessionId, session);
+      }
+    } catch (error) {
+      console.error(`Error loading session ${sessionId}:`, error);
+      // Fall through to redirect to new session
+    }
+  }
 
   if (!session) {
     // Session not found, redirect to create a new one
@@ -134,6 +158,14 @@ exports.submitCode = async (req, res) => {
     // Process and advance state
     if (session.processSubmission(feedback) && feedback.proceed === 'yes') {
       session.advanceState();
+      
+      // Auto-save after state change
+      try {
+        await persistenceService.saveSession(sessionId, session.toJSON());
+      } catch (error) {
+        console.error(`Error saving session ${sessionId} after state change:`, error);
+        // Continue without failing the request
+      }
     }
 
     // Render updated view
@@ -165,6 +197,14 @@ exports.submitCode = async (req, res) => {
     // Process feedback and update session state if needed
     if (session.processSubmission(feedback) && feedback.proceed === 'yes') {
       session.advanceState();
+      
+      // Auto-save after state change
+      try {
+        await persistenceService.saveSession(sessionId, session.toJSON());
+      } catch (error) {
+        console.error(`Error saving session ${sessionId} after state change:`, error);
+        // Continue without failing the request
+      }
     }
 
     // Render updated view
@@ -264,7 +304,7 @@ exports.getHint = async (req, res) => {
   }
 };
 
-exports.restartSession = (req, res) => {
+exports.restartSession = async (req, res) => {
   const { sessionId } = req.body;
 
   // Get the FizzBuzz kata object
@@ -276,8 +316,18 @@ exports.restartSession = (req, res) => {
   // Create a fresh session
   const oldSession = sessions.get(sessionId);
   const newSession = new Session(fizzbuzzKata);
-  newSession.tokenUsage = oldSession.tokenUsage; // Keep the same token usage tracker
+  if (oldSession) {
+    newSession.runningCost = oldSession.runningCost; // Keep the same running cost tracker
+  }
   sessions.set(sessionId, newSession);
+
+  // Save restarted session
+  try {
+    await persistenceService.saveSession(sessionId, newSession.toJSON());
+  } catch (error) {
+    console.error(`Error saving restarted session ${sessionId}:`, error);
+    // Continue without persistence - don't fail session restart
+  }
 
   const viewData = getSessionViewData(sessionId, newSession, "Session restarted. Let's begin again!", null);
   res.render('session', viewData);

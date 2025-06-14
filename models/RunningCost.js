@@ -84,6 +84,33 @@ class RunningCost {
     this.actualCost = 0;
     return this;
   }
+
+  /**
+   * Serialize to JSON-compatible object
+   * @returns {Object} Serializable running cost data
+   */
+  toJSON() {
+    return {
+      callCount: this.callCount,
+      actualCost: this.actualCost,
+      provider: this.provider,
+      model: this.model
+    };
+  }
+
+  /**
+   * Create RunningCost from serialized data
+   * @param {Object} data - Serialized running cost data
+   * @returns {RunningCost} Restored running cost instance
+   */
+  static fromJSON(data) {
+    const runningCost = new RunningCost();
+    runningCost.callCount = data.callCount || 0;
+    runningCost.actualCost = data.actualCost || 0;
+    runningCost.provider = data.provider || 'openrouter';
+    runningCost.model = data.model || process.env.OPENROUTER_MODEL || 'anthropic/claude-3-7-sonnet';
+    return runningCost;
+  }
 }
 
 module.exports = RunningCost;

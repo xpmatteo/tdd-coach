@@ -307,6 +307,78 @@ class Session {
   get currentState() {
     return this.#currentState;
   }
+
+  /**
+   * Serialize session to JSON-compatible object
+   * @returns {Object} Serializable session data
+   */
+  toJSON() {
+    return {
+      kataName: this.#kataName,
+      testCases: this.#testCases,
+      productionCode: this.#productionCode,
+      testCode: this.#testCode,
+      currentTestIndex: this.#currentTestIndex,
+      selectedTestIndex: this.#selectedTestIndex,
+      lastLlmInteraction: this.#lastLlmInteraction,
+      currentState: this.#currentState.getName(),
+      runningCost: this.#runningCost.toJSON(),
+      codeExecutionResults: this.#codeExecutionResults
+    };
+  }
+
+  /**
+   * Create session from serialized data
+   * @param {Object} data - Serialized session data
+   * @returns {Session} Restored session instance
+   */
+  static fromJSON(data) {
+    const katas = require('./katas');
+    const PickState = require('./states/PickState');
+    const RedState = require('./states/RedState');
+    const GreenState = require('./states/GreenState');
+    const RefactorState = require('./states/RefactorState');
+    const CompleteState = require('./states/CompleteState');
+    
+    // Find the kata by name (katas is an object, not array)
+    const kata = Object.values(katas).find(k => k.name === data.kataName);
+    if (!kata) {
+      throw new Error(`Kata not found: ${data.kataName}`);
+    }
+    
+    // Create a new session but replace the initial data
+    const session = new Session(kata);
+    
+    // Restore private fields
+    session.#testCases = data.testCases;
+    session.#productionCode = data.productionCode;
+    session.#testCode = data.testCode;
+    session.#currentTestIndex = data.currentTestIndex;
+    session.#selectedTestIndex = data.selectedTestIndex;
+    session.#lastLlmInteraction = data.lastLlmInteraction;
+    session.#codeExecutionResults = data.codeExecutionResults;
+    
+    // Restore running cost
+    session.#runningCost = RunningCost.fromJSON(data.runningCost);
+    
+    // Restore state
+    const stateMap = {
+      'PICK': PickState,
+      'RED': RedState,
+      'GREEN': GreenState,
+      'REFACTOR': RefactorState,
+      'COMPLETE': CompleteState
+    };
+    
+    const StateClass = stateMap[data.currentState];
+    if (!StateClass) {
+      throw new Error(`Unknown state: ${data.currentState}`);
+    }
+    
+    session.#currentState = new StateClass(session);
+    
+    return session;
+  }
 }
 
 module.exports = Session;
