@@ -1,10 +1,11 @@
 # TODO
 
- - Add the previous version of the code and tests to the LLM input
- - Make sessions persistent to avoid losing them when we change the code
+ - The hint should be provided only when hint is requested -- the hint confuses the LLM
  - Make it possible to return to a previous state
  - Make better use of screen estate
-
+ - Ask the coach a question
+ - Propose to end the exercise
+ - Remove duplication in tests
 
 # BUGS
 - after reload, it no longer updates the coach feedback
