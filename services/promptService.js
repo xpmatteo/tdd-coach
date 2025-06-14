@@ -11,32 +11,32 @@ Object.keys(handlebarsHelpers).forEach(helperName => {
 // Load and compile system prompt templates
 const systemPromptTemplates = {
   PICK: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../prompts/system/pick.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/system/system-pick.hbs'), 'utf8'
   )),
   RED: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../prompts/system/red.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/system/system-red.hbs'), 'utf8'
   )),
   GREEN: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../prompts/system/green.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/system/system-green.hbs'), 'utf8'
   )),
   REFACTOR: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../prompts/system/refactor.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/system/system-refactor.hbs'), 'utf8'
   ))
 };
 
 // Load and compile user prompt templates
 const userPromptTemplates = {
   PICK: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../prompts/user/pick.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/user/user-pick.hbs'), 'utf8'
   )),
   RED: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../prompts/user/red.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/user/user-red.hbs'), 'utf8'
   )),
   GREEN: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../prompts/user/green.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/user/user-green.hbs'), 'utf8'
   )),
   REFACTOR: Handlebars.compile(fs.readFileSync(
-    path.join(__dirname, '../prompts/user/refactor.hbs'), 'utf8'
+    path.join(__dirname, '../prompts/user/user-refactor.hbs'), 'utf8'
   ))
 };
 
