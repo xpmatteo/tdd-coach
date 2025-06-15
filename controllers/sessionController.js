@@ -3,7 +3,6 @@ const { getLlmFeedback } = require('../services/llmService');
 const { executeCode } = require('../services/codeExecutionService');
 const Session = require('../models/Session');
 const SessionPersistenceService = require('../services/sessionPersistenceService');
-const { v4: uuidv4 } = require('uuid');
 const katas = require('../models/katas');
 
 // Store active sessions in memory (with persistence backing)
@@ -13,29 +12,6 @@ const persistenceService = new SessionPersistenceService();
 // Export sessions map for testing
 exports.sessions = sessions;
 
-exports.newSession = async (req, res) => {
-  // Get the FizzBuzz kata object
-  const fizzbuzzKata = katas['fizzbuzz'];
-  if (!fizzbuzzKata) {
-    return res.status(404).send('FizzBuzz kata not found');
-  }
-
-  // Create a new session with the FizzBuzz kata object
-  const sessionId = uuidv4();
-  const session = new Session(fizzbuzzKata);
-  sessions.set(sessionId, session);
-
-  // Save initial session state
-  try {
-    await persistenceService.saveSession(sessionId, session.toJSON());
-  } catch (error) {
-    console.error(`Error saving new session ${sessionId}:`, error);
-    // Continue without persistence - don't fail session creation
-  }
-
-  // Redirect to the session URL with ID
-  res.redirect(`/session/${sessionId}`);
-};
 
 // Helper function to prepare session view data
 const getSessionViewData = (sessionId, session, feedback = null, proceed = null) => {

@@ -7,6 +7,10 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 const sessionController = require('./controllers/sessionController');
+const createNewSessionHandler = require('./handlers/newSessionHandler');
+const SessionManager = require('./services/sessionManager');
+const SessionPersistenceService = require('./services/sessionPersistenceService');
+const katas = require('./models/katas');
 
 const llmService = require('./services/llmService');
 const OpenRouterAdapter = require('./services/adapters/OpenRouterAdapter');
@@ -33,9 +37,13 @@ app.engine('handlebars', engine({
 app.set('view engine', 'handlebars');
 app.set('views', './views');
 
+// Create session manager and newSession handler
+const persistenceService = new SessionPersistenceService();
+const sessionManager = new SessionManager(sessionController.sessions, persistenceService);
+const newSessionHandler = createNewSessionHandler(katas, sessionManager);
+
 // Routes
 app.get('/', (req, res) => {
-  const katas = require('./models/katas');
   const kataList = Object.entries(katas).map(([key, kata]) => ({
     key,
     name: kata.name,
@@ -45,7 +53,7 @@ app.get('/', (req, res) => {
 });
 
 // Session routes
-app.get('/session/new', sessionController.newSession);
+app.get('/session/new', newSessionHandler);
 app.get('/session/:id', sessionController.getSession);
 app.post('/session/submit', sessionController.submitCode);
 app.post('/session/hint', sessionController.getHint);

@@ -1,14 +1,16 @@
-const { submitCode } = require('../../controllers/sessionController');
+const { submitCode, newSession } = require('../../controllers/sessionController');
 const { getPrompts } = require('../../services/promptService');
 const { getLlmFeedback } = require('../../services/llmService');
 const { executeCode } = require('../../services/codeExecutionService');
 const Session = require('../../models/Session');
+const katas = require('../../models/katas');
 
 // Mock dependencies
 jest.mock('../../services/promptService');
 jest.mock('../../services/llmService');
 jest.mock('../../services/codeExecutionService');
 jest.mock('../../models/Session');
+jest.mock('uuid', () => ({ v4: () => 'mock-uuid-123' }));
 
 describe('sessionController', () => {
   let req, res, mockSession;
