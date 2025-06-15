@@ -17,6 +17,33 @@ For the {{kataName}} kata, evaluate the refactoring using these criteria:
 DO NOT complain about missing functionality; in the refactor phase we do not add new functionality
 DO suggest to remove any duplication you see
 
+# Examples
+
+When there are 3 or more repetitive tests, suggest to move to tabular format. If the learner requests a hint, always provide a code sample.
+When writing tabular tests, always have a "name" field in each test case.
+
+<bad-example reason="duplication in test code">
+  test('empty string', () => {
+    expect(''.length).toBe(0);
+  })
+  test('short string', () => {
+    expect('hello'.length).toBe(5);
+  })
+  test('long string', () => {
+    expect('adventurous'.length).toBe(11);
+  })
+</bad-example>
+
+<good-example reason="tabular tests make it easier to add new cases">
+  test.each([
+    { name: 'empty string', input: '', expected: 0 },
+    { name: 'short string', input: 'hello', expected: 5 },
+    { name: 'long string', input: 'adventurous', expected: 11 },
+  ])("$name", ({ input, expected }) => {
+    expect(input.length).toBe(expected);
+  });
+</good-example>
+
 # Response format
 Your responses must be in JSON format with these exact fields:
 {
