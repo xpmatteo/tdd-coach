@@ -3,7 +3,7 @@
  - The hint should be provided only when hint is requested -- the hint confuses the LLM
  - Better feedback on the whole performance at end of kata
  - Better detection that the kata is complete
- - 
+ - The hint should use the previous suggestion as context -- otherwise it might not be helpful
  - Make it possible to return to a previous state
  - Make better use of screen estate
  - Ask the coach a question
