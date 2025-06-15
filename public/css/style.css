@@ -61,3 +61,12 @@ body {
 .CodeMirror-scroll {
   min-height: 300px;
 }
+
+/* Ensure loading overlay doesn't interfere with text selection */
+.feedback-loading-overlay {
+  pointer-events: none;
+}
+
+.feedback-loading-overlay.htmx-indicator {
+  pointer-events: auto;
+}
