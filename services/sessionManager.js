@@ -25,6 +25,30 @@ class SessionManager {
 
     return session;
   }
+
+  findSession(sessionId) {
+    return this.sessions.get(sessionId);
+  }
+
+  async loadFromPersistence(sessionId) {
+    if (!this.persistenceService) {
+      return null;
+    }
+
+    const sessionData = await this.persistenceService.loadLatestSession(sessionId);
+    if (sessionData) {
+      const session = Session.fromJSON(sessionData);
+      this.sessions.set(sessionId, session);
+      return session;
+    }
+    return null;
+  }
+
+  async saveSession(sessionId, session) {
+    if (this.persistenceService) {
+      await this.persistenceService.saveSession(sessionId, session.toJSON());
+    }
+  }
 }
 
 module.exports = SessionManager;

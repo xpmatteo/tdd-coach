@@ -1,4 +1,4 @@
-const { submitCode, getHint, sessions } = require('../../controllers/sessionController');
+const { getHint, sessions } = require('../../controllers/sessionController');
 const { getLlmFeedback } = require('../../services/llmService');
 const Session = require('../../models/Session');
 const RunningCost = require('../../models/RunningCost');
@@ -68,87 +68,6 @@ describe('Session Controller Error Handling', () => {
     jest.clearAllMocks();
   });
 
-  test('should handle network errors from LLM in submitCode', async () => {
-    // Set up request body
-    req.body.sessionId = testSessionId;
-    const networkError = new Error('Network timeout');
-    networkError.type = 'network';
-    networkError.originalError = new Error('Network timeout');
-
-    getLlmFeedback.mockImplementation(() => { throw networkError; });
-
-    await submitCode(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      error: {
-        type: 'system',
-        message: 'Error processing your submission',
-        details: expect.objectContaining({
-          type: 'network',
-          message: 'Network timeout',
-          details: expect.stringContaining('Error: Network timeout')
-        })
-      }
-    }));
-    expect(res.render).not.toHaveBeenCalled();
-  });
-  
-  test('should handle JSON parsing errors from LLM in submitCode', async () => {
-    // Set up request body
-    req.body.sessionId = testSessionId;
-    const parseError = new SyntaxError('Unexpected token');
-    parseError.type = 'parse';
-    parseError.rawResponse = 'This is not valid JSON';
-    parseError.originalError = new SyntaxError('Unexpected token');
-
-    getLlmFeedback.mockImplementation(() => { throw parseError; });
-
-    await submitCode(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      error: {
-        type: 'system',
-        message: 'Error processing your submission',
-        details: expect.objectContaining({
-          type: 'parse',
-          message: 'Unexpected token',
-          rawResponse: 'This is not valid JSON',
-          details: expect.stringContaining('SyntaxError: Unexpected token')
-        })
-      }
-    }));
-    expect(res.render).not.toHaveBeenCalled();
-  });
-  
-  test('should handle API errors from LLM in submitCode', async () => {
-    // Set up request body
-    req.body.sessionId = testSessionId;
-    const apiError = new Error('API responded with 429 Too Many Requests');
-    apiError.type = 'api';
-    apiError.status = 429;
-    apiError.originalError = new Error('API responded with 429 Too Many Requests');
-
-    getLlmFeedback.mockImplementation(() => { throw apiError; });
-
-    await submitCode(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      error: {
-        type: 'system',
-        message: 'Error processing your submission',
-        details: expect.objectContaining({
-          type: 'api',
-          message: 'API responded with 429 Too Many Requests',
-          status: 429,
-          details: expect.stringContaining('Error: API responded with 429 Too Many Requests')
-        })
-      }
-    }));
-    expect(res.render).not.toHaveBeenCalled();
-  });
   
   test('should handle network errors from LLM in getHint', async () => {
     // Set up request body

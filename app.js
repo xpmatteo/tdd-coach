@@ -8,8 +8,14 @@ const path = require('path');
 
 const sessionController = require('./controllers/sessionController');
 const createNewSessionHandler = require('./handlers/newSessionHandler');
+const createGetSessionHandler = require('./handlers/getSessionHandler');
+const createSubmitCodeHandler = require('./handlers/submitCodeHandler');
 const SessionManager = require('./services/sessionManager');
 const SessionPersistenceService = require('./services/sessionPersistenceService');
+const ViewDataBuilder = require('./services/viewDataBuilder');
+const CodeExecutor = require('./services/codeExecutor');
+const { getPrompts } = require('./services/promptService');
+const { getLlmFeedback } = require('./services/llmService');
 const katas = require('./models/katas');
 
 const llmService = require('./services/llmService');
@@ -37,10 +43,16 @@ app.engine('handlebars', engine({
 app.set('view engine', 'handlebars');
 app.set('views', './views');
 
-// Create session manager and newSession handler
+// Create session manager and handlers
 const persistenceService = new SessionPersistenceService();
 const sessionManager = new SessionManager(sessionController.sessions, persistenceService);
+const viewDataBuilder = new ViewDataBuilder();
+const codeExecutor = new CodeExecutor();
+const promptService = { getPrompts };
+const llmServiceWrapper = { getLlmFeedback };
 const newSessionHandler = createNewSessionHandler(katas, sessionManager);
+const getSessionHandler = createGetSessionHandler(sessionManager, viewDataBuilder);
+const submitCodeHandler = createSubmitCodeHandler(sessionManager, codeExecutor, promptService, llmServiceWrapper, viewDataBuilder);
 
 // Routes
 app.get('/', (req, res) => {
@@ -54,8 +66,8 @@ app.get('/', (req, res) => {
 
 // Session routes
 app.get('/session/new', newSessionHandler);
-app.get('/session/:id', sessionController.getSession);
-app.post('/session/submit', sessionController.submitCode);
+app.get('/session/:id', getSessionHandler);
+app.post('/session/submit', submitCodeHandler);
 app.post('/session/hint', sessionController.getHint);
 app.post('/session/restart', sessionController.restartSession);
 
