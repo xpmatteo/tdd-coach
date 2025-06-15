@@ -10,6 +10,8 @@ const sessionController = require('./controllers/sessionController');
 const createNewSessionHandler = require('./handlers/newSessionHandler');
 const createGetSessionHandler = require('./handlers/getSessionHandler');
 const createSubmitCodeHandler = require('./handlers/submitCodeHandler');
+const createGetHintHandler = require('./handlers/getHintHandler');
+const createRestartSessionHandler = require('./handlers/restartSessionHandler');
 const SessionManager = require('./services/sessionManager');
 const SessionPersistenceService = require('./services/sessionPersistenceService');
 const ViewDataBuilder = require('./services/viewDataBuilder');
@@ -53,6 +55,8 @@ const llmServiceWrapper = { getLlmFeedback };
 const newSessionHandler = createNewSessionHandler(katas, sessionManager);
 const getSessionHandler = createGetSessionHandler(sessionManager, viewDataBuilder);
 const submitCodeHandler = createSubmitCodeHandler(sessionManager, codeExecutor, promptService, llmServiceWrapper, viewDataBuilder);
+const getHintHandler = createGetHintHandler(sessionManager, promptService, llmServiceWrapper);
+const restartSessionHandler = createRestartSessionHandler(sessionManager, viewDataBuilder);
 
 // Routes
 app.get('/', (req, res) => {
@@ -68,8 +72,8 @@ app.get('/', (req, res) => {
 app.get('/session/new', newSessionHandler);
 app.get('/session/:id', getSessionHandler);
 app.post('/session/submit', submitCodeHandler);
-app.post('/session/hint', sessionController.getHint);
-app.post('/session/restart', sessionController.restartSession);
+app.post('/session/hint', getHintHandler);
+app.post('/session/restart', restartSessionHandler);
 
 
 

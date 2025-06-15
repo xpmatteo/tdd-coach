@@ -49,6 +49,31 @@ class SessionManager {
       await this.persistenceService.saveSession(sessionId, session.toJSON());
     }
   }
+
+  async restartSession(sessionId, oldSession) {
+    // Create a fresh session with the same kata
+    const newSession = new Session(oldSession.kata);
+    
+    // Preserve the running cost tracker
+    if (oldSession.runningCost) {
+      newSession.runningCost = oldSession.runningCost;
+    }
+    
+    // Store the new session
+    this.sessions.set(sessionId, newSession);
+
+    // Save restarted session
+    if (this.persistenceService) {
+      try {
+        await this.persistenceService.saveSession(sessionId, newSession.toJSON());
+      } catch (error) {
+        console.error(`Error saving restarted session ${sessionId}:`, error);
+        // Continue without persistence - don't fail session restart
+      }
+    }
+
+    return newSession;
+  }
 }
 
 module.exports = SessionManager;

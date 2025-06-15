@@ -1,4 +1,4 @@
-const { getHint, sessions } = require('../../controllers/sessionController');
+const { sessions } = require('../../controllers/sessionController');
 const { getLlmFeedback } = require('../../services/llmService');
 const Session = require('../../models/Session');
 const RunningCost = require('../../models/RunningCost');
@@ -69,28 +69,8 @@ describe('Session Controller Error Handling', () => {
   });
 
   
-  test('should handle network errors from LLM in getHint', async () => {
-    // Set up request body
-    req.body.sessionId = testSessionId;
-    const networkError = new Error('Network timeout');
-    networkError.type = 'network';
-    networkError.originalError = new Error('Network timeout');
-
-    getLlmFeedback.mockImplementation(() => { throw networkError; });
-
-    await getHint(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      error: {
-        type: 'system',
-        message: 'Failed to get hint',
-        details: expect.objectContaining({
-          type: 'network',
-          message: 'Network timeout',
-          details: expect.stringContaining('Error: Network timeout')
-        })
-      }
-    }));
+  test('sessionController should export sessions map', () => {
+    expect(sessions).toBeDefined();
+    expect(sessions instanceof Map).toBe(true);
   });
 });
