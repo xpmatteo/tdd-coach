@@ -2,9 +2,9 @@
  * Code Execution Service
  * 
  * This service provides functionality to execute user code and tests in a controlled environment.
- * It uses eval() which is generally unsafe, but acceptable for this MVP as it's only running locally.
+ * It uses a fast custom Jest-like implementation with support for test.each() for tabular tests.
  * 
- * WARNING: This should NEVER be used in a production environment or with untrusted code.
+ * WARNING: This uses eval() which is generally unsafe, but acceptable for this MVP as it's only running locally.
  */
 
 /**
@@ -107,33 +107,13 @@ function createSandbox(testResults, consoleOutput) {
       }
     },
     
-    test: (description, fn) => {
-      // Store full path for context but just use the test description in the result
-      const fullDescription = [...currentDescribe, description].join(' > ');
-      
-      currentTest = {
-        description: description,
-        success: true,
-        error: null
-      };
-      
-      testResults.push(currentTest);
-      
-      try {
-        fn();
-      } catch (error) {
-        currentTest.success = false;
-        currentTest.error = `${error.name}: ${error.message}`;
-      }
-      
-      currentTest = null;
-    },
+    test: createTestFunction(testResults),
     
     expect: (actual) => {
       return {
         toBe: (expected) => {
           if (actual !== expected) {
-            const error = new Error(`Expected: ${expected}\nReceived: ${actual}`);
+            const error = new Error(`Expected: ${JSON.stringify(expected)}\nReceived: ${JSON.stringify(actual)}`);
             error.name = 'AssertionError';
             throw error;
           }
@@ -193,7 +173,7 @@ function createSandbox(testResults, consoleOutput) {
         not: {
           toBe: (expected) => {
             if (actual === expected) {
-              const error = new Error(`Expected: not ${expected}\nReceived: ${actual}`);
+              const error = new Error(`Expected: not ${JSON.stringify(expected)}\nReceived: ${JSON.stringify(actual)}`);
               error.name = 'AssertionError';
               throw error;
             }
@@ -226,6 +206,63 @@ function createSandbox(testResults, consoleOutput) {
   sandbox.it = sandbox.test;
   
   return sandbox;
+}
+
+/**
+ * Create test function with support for test.each
+ * @param {Array} testResults - Array to collect test results
+ * @returns {Function} Test function with .each support
+ */
+function createTestFunction(testResults) {
+  function test(description, fn) {
+    const currentTest = {
+      description: description,
+      success: true,
+      error: null
+    };
+    
+    testResults.push(currentTest);
+    
+    try {
+      fn();
+    } catch (error) {
+      currentTest.success = false;
+      currentTest.error = `${error.name}: ${error.message}`;
+    }
+  }
+  
+  // Add test.each support
+  test.each = (dataArray) => {
+    return (descriptionTemplate, testFn) => {
+      dataArray.forEach((testData) => {
+        // Replace template variables in description
+        let description = descriptionTemplate;
+        if (typeof testData === 'object' && testData.name) {
+          description = testData.name;
+        } else {
+          // Simple template replacement for $name
+          description = description.replace(/\$name/g, testData.name || JSON.stringify(testData));
+        }
+        
+        const currentTest = {
+          description: description,
+          success: true,
+          error: null
+        };
+        
+        testResults.push(currentTest);
+        
+        try {
+          testFn(testData);
+        } catch (error) {
+          currentTest.success = false;
+          currentTest.error = `${error.name}: ${error.message}`;
+        }
+      });
+    };
+  };
+  
+  return test;
 }
 
 /**

@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Tests use Jest framework. For focused testing, run individual test files:
 - `npm test -- tests/services/llmService.test.js`
 - `npm test -- --watch` for watch mode
+- Always run all the tests with `make test` before declaring victory
 
 ## Project Architecture
 
@@ -46,7 +47,13 @@ This is a TDD (Test-Driven Development) coaching application that guides users t
 **Code Executor (services/codeExecutor.js)**
 - Wrapper around code execution service
 - Provides clean interface for handlers
-- Executes user code server-side in controlled Node.js environment
+- Executes user code server-side with fast custom Jest-like implementation
+
+**Code Execution Service (services/codeExecutionService.js)**
+- Fast custom Jest-like implementation with support for test.each() for tabular/parameterized tests
+- Uses eval() in controlled environment for immediate feedback (local development only)
+- Supports core Jest assertions and describe/test blocks
+- Optimized for speed while maintaining compatibility with common Jest patterns
 
 **Session Model (models/Session.js)**
 - Implements the TDD state machine using the State pattern
@@ -132,6 +139,6 @@ Requires `.env` file with:
 
 ### Current Limitations
 - Session data is in-memory only (not persistent)
-- Code execution limited to JavaScript with Jest-like syntax
+- Code execution limited to JavaScript with custom Jest-like syntax (supports test.each, core assertions)
 
 When modifying this codebase, follow the established patterns and refer to docs/AI_RULES.md for detailed coding standards and conventions.

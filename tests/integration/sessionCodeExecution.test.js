@@ -91,8 +91,8 @@ describe('Session with Code Execution', () => {
     expect(storedResults.success).toBe(false);
     expect(storedResults.testResults[0].success).toBe(true); // First test passes
     expect(storedResults.testResults[1].success).toBe(false); // Second test fails
-    expect(storedResults.testResults[1].error).toContain('Expected: Fizz');
-    expect(storedResults.testResults[1].error).toContain('Received: Buzz');
+    expect(storedResults.testResults[1].error).toContain('Expected: "Fizz"');
+    expect(storedResults.testResults[1].error).toContain('Received: "Buzz"');
   });
 
   test('should handle syntax errors', () => {

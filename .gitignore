@@ -3,3 +3,4 @@ node_modules
 .shoreman.pid
 dev.log
 data/
+temp/

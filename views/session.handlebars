@@ -57,8 +57,16 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        z-index: 10;
         border-radius: 0.25rem;
+        pointer-events: none; /* Allow clicks through when not loading */
+        z-index: -1; /* Behind content when hidden */
+    }
+    
+    /* Only show overlay and block interactions when actually visible */
+    .htmx-request .feedback-loading-overlay,
+    .htmx-request.feedback-loading-overlay {
+        pointer-events: auto;
+        z-index: 10;
     }
 
     /* Readonly editors look */
@@ -70,6 +78,7 @@
     @keyframes spinner {
         to { transform: rotate(360deg); }
     }
+
 </style>
 
 <div class="row mb-3">
