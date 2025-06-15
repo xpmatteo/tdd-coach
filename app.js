@@ -35,7 +35,13 @@ app.set('views', './views');
 
 // Routes
 app.get('/', (req, res) => {
-  res.render('home');
+  const katas = require('./models/katas');
+  const kataList = Object.entries(katas).map(([key, kata]) => ({
+    key,
+    name: kata.name,
+    description: kata.description
+  }));
+  res.render('home', { katas: kataList });
 });
 
 // Session routes
